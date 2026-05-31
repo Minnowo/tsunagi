@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package = "tsunagi/src/rpc";
+
+package rpc;
+
+service Tsunagi {
+  rpc DeliverMessage(DeliverRequest) returns (Empty) {}
+  rpc ForwardMessage(ForwardRequest) returns (Empty) {}
+}
+
+message Empty {}
+
+message ForwardRequest {
+  bytes  DeviceID   = 1;
+  string RelayAddr  = 2;
+  bytes  CipherText = 3;
+}
+
+message DeliverRequest {
+  bytes  DeviceID   = 1;
+  bytes  CipherText = 2;
+}
