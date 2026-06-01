@@ -22,6 +22,198 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// AuthRequest is sent by a client who wants to authenticate.
+// They will provide their identity and then wait to verify it.
+type AuthRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
+	PubKey        []byte                 `protobuf:"bytes,2,opt,name=PubKey,proto3" json:"PubKey,omitempty"`     // public key
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthRequest) Reset() {
+	*x = AuthRequest{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthRequest) ProtoMessage() {}
+
+func (x *AuthRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthRequest.ProtoReflect.Descriptor instead.
+func (*AuthRequest) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *AuthRequest) GetDeviceID() []byte {
+	if x != nil {
+		return x.DeviceID
+	}
+	return nil
+}
+
+func (x *AuthRequest) GetPubKey() []byte {
+	if x != nil {
+		return x.PubKey
+	}
+	return nil
+}
+
+// AuthChallenge is sent by the server to a connecting client.
+// They must solve it and provide a proof.
+type AuthChallenge struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// random string which much be signed by the private key
+	Nonce         []byte `protobuf:"bytes,1,opt,name=Nonce,proto3" json:"Nonce,omitempty"` // proof of work??
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthChallenge) Reset() {
+	*x = AuthChallenge{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthChallenge) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthChallenge) ProtoMessage() {}
+
+func (x *AuthChallenge) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthChallenge.ProtoReflect.Descriptor instead.
+func (*AuthChallenge) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AuthChallenge) GetNonce() []byte {
+	if x != nil {
+		return x.Nonce
+	}
+	return nil
+}
+
+// AuthProof is the solved challenge.
+type AuthProof struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// signature of the nonce
+	Signature     []byte `protobuf:"bytes,1,opt,name=Signature,proto3" json:"Signature,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthProof) Reset() {
+	*x = AuthProof{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthProof) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthProof) ProtoMessage() {}
+
+func (x *AuthProof) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthProof.ProtoReflect.Descriptor instead.
+func (*AuthProof) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AuthProof) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+// AuthToken returns the token to authenticate with the Tsunagi service.
+type AuthToken struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         []byte                 `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuthToken) Reset() {
+	*x = AuthToken{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuthToken) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthToken) ProtoMessage() {}
+
+func (x *AuthToken) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthToken.ProtoReflect.Descriptor instead.
+func (*AuthToken) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *AuthToken) GetToken() []byte {
+	if x != nil {
+		return x.Token
+	}
+	return nil
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -30,7 +222,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[0]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +234,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[0]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,19 +247,23 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{0}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{4}
 }
 
 type Event struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CipherText    []byte                 `protobuf:"bytes,1,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Body:
+	//
+	//	*Event_ForwardRequest
+	//	*Event_DeliverRequest
+	Body          isEvent_Body `protobuf_oneof:"Body"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Event) Reset() {
 	*x = Event{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -79,7 +275,7 @@ func (x *Event) String() string {
 func (*Event) ProtoMessage() {}
 
 func (x *Event) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -92,59 +288,49 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Event.ProtoReflect.Descriptor instead.
 func (*Event) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{1}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *Event) GetCipherText() []byte {
+func (x *Event) GetBody() isEvent_Body {
 	if x != nil {
-		return x.CipherText
+		return x.Body
 	}
 	return nil
 }
 
-type ConnectRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ConnectRequest) Reset() {
-	*x = ConnectRequest{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ConnectRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ConnectRequest) ProtoMessage() {}
-
-func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+func (x *Event) GetForwardRequest() *ForwardRequest {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
+		if x, ok := x.Body.(*Event_ForwardRequest); ok {
+			return x.ForwardRequest
 		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ConnectRequest.ProtoReflect.Descriptor instead.
-func (*ConnectRequest) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ConnectRequest) GetDeviceID() []byte {
-	if x != nil {
-		return x.DeviceID
 	}
 	return nil
 }
+
+func (x *Event) GetDeliverRequest() *DeliverRequest {
+	if x != nil {
+		if x, ok := x.Body.(*Event_DeliverRequest); ok {
+			return x.DeliverRequest
+		}
+	}
+	return nil
+}
+
+type isEvent_Body interface {
+	isEvent_Body()
+}
+
+type Event_ForwardRequest struct {
+	ForwardRequest *ForwardRequest `protobuf:"bytes,1,opt,name=ForwardRequest,proto3,oneof"`
+}
+
+type Event_DeliverRequest struct {
+	DeliverRequest *DeliverRequest `protobuf:"bytes,2,opt,name=DeliverRequest,proto3,oneof"`
+}
+
+func (*Event_ForwardRequest) isEvent_Body() {}
+
+func (*Event_DeliverRequest) isEvent_Body() {}
 
 type ForwardRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -157,7 +343,7 @@ type ForwardRequest struct {
 
 func (x *ForwardRequest) Reset() {
 	*x = ForwardRequest{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -169,7 +355,7 @@ func (x *ForwardRequest) String() string {
 func (*ForwardRequest) ProtoMessage() {}
 
 func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -182,7 +368,7 @@ func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardRequest.ProtoReflect.Descriptor instead.
 func (*ForwardRequest) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{3}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ForwardRequest) GetDeviceID() []byte {
@@ -216,7 +402,7 @@ type DeliverRequest struct {
 
 func (x *DeliverRequest) Reset() {
 	*x = DeliverRequest{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +414,7 @@ func (x *DeliverRequest) String() string {
 func (*DeliverRequest) ProtoMessage() {}
 
 func (x *DeliverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +427,7 @@ func (x *DeliverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliverRequest.ProtoReflect.Descriptor instead.
 func (*DeliverRequest) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{4}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeliverRequest) GetDeviceID() []byte {
@@ -262,14 +448,21 @@ var File_src_rpc_tsunagi_proto protoreflect.FileDescriptor
 
 const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\n" +
-	"\x15src/rpc/tsunagi.proto\x12\x03rpc\"\a\n" +
-	"\x05Empty\"'\n" +
-	"\x05Event\x12\x1e\n" +
-	"\n" +
-	"CipherText\x18\x01 \x01(\fR\n" +
-	"CipherText\",\n" +
-	"\x0eConnectRequest\x12\x1a\n" +
-	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\"j\n" +
+	"\x15src/rpc/tsunagi.proto\x12\x03rpc\"A\n" +
+	"\vAuthRequest\x12\x1a\n" +
+	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x16\n" +
+	"\x06PubKey\x18\x02 \x01(\fR\x06PubKey\"%\n" +
+	"\rAuthChallenge\x12\x14\n" +
+	"\x05Nonce\x18\x01 \x01(\fR\x05Nonce\")\n" +
+	"\tAuthProof\x12\x1c\n" +
+	"\tSignature\x18\x01 \x01(\fR\tSignature\"!\n" +
+	"\tAuthToken\x12\x14\n" +
+	"\x05Token\x18\x01 \x01(\fR\x05Token\"\a\n" +
+	"\x05Empty\"\x8d\x01\n" +
+	"\x05Event\x12=\n" +
+	"\x0eForwardRequest\x18\x01 \x01(\v2\x13.rpc.ForwardRequestH\x00R\x0eForwardRequest\x12=\n" +
+	"\x0eDeliverRequest\x18\x02 \x01(\v2\x13.rpc.DeliverRequestH\x00R\x0eDeliverRequestB\x06\n" +
+	"\x04Body\"j\n" +
 	"\x0eForwardRequest\x12\x1a\n" +
 	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x1c\n" +
 	"\tRelayAddr\x18\x02 \x01(\tR\tRelayAddr\x12\x1e\n" +
@@ -280,14 +473,14 @@ const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x1e\n" +
 	"\n" +
 	"CipherText\x18\x02 \x01(\fR\n" +
-	"CipherText2\xa3\x01\n" +
-	"\aTsunagi\x12.\n" +
-	"\aConnect\x12\x13.rpc.ConnectRequest\x1a\n" +
-	".rpc.Event\"\x000\x01\x123\n" +
-	"\x0eDeliverMessage\x12\x13.rpc.DeliverRequest\x1a\n" +
-	".rpc.Empty\"\x00\x123\n" +
-	"\x0eForwardMessage\x12\x13.rpc.ForwardRequest\x1a\n" +
-	".rpc.Empty\"\x00B\x11Z\x0ftsunagi/src/rpcb\x06proto3"
+	"CipherText2r\n" +
+	"\x04Auth\x126\n" +
+	"\fGetChallenge\x12\x10.rpc.AuthRequest\x1a\x12.rpc.AuthChallenge\"\x00\x122\n" +
+	"\x0eProveChallenge\x12\x0e.rpc.AuthProof\x1a\x0e.rpc.AuthToken\"\x0022\n" +
+	"\aTsunagi\x12'\n" +
+	"\aConnect\x12\n" +
+	".rpc.Event\x1a\n" +
+	".rpc.Event\"\x00(\x010\x01B\x11Z\x0ftsunagi/src/rpcb\x06proto3"
 
 var (
 	file_src_rpc_tsunagi_proto_rawDescOnce sync.Once
@@ -301,26 +494,31 @@ func file_src_rpc_tsunagi_proto_rawDescGZIP() []byte {
 	return file_src_rpc_tsunagi_proto_rawDescData
 }
 
-var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_src_rpc_tsunagi_proto_goTypes = []any{
-	(*Empty)(nil),          // 0: rpc.Empty
-	(*Event)(nil),          // 1: rpc.Event
-	(*ConnectRequest)(nil), // 2: rpc.ConnectRequest
-	(*ForwardRequest)(nil), // 3: rpc.ForwardRequest
-	(*DeliverRequest)(nil), // 4: rpc.DeliverRequest
+	(*AuthRequest)(nil),    // 0: rpc.AuthRequest
+	(*AuthChallenge)(nil),  // 1: rpc.AuthChallenge
+	(*AuthProof)(nil),      // 2: rpc.AuthProof
+	(*AuthToken)(nil),      // 3: rpc.AuthToken
+	(*Empty)(nil),          // 4: rpc.Empty
+	(*Event)(nil),          // 5: rpc.Event
+	(*ForwardRequest)(nil), // 6: rpc.ForwardRequest
+	(*DeliverRequest)(nil), // 7: rpc.DeliverRequest
 }
 var file_src_rpc_tsunagi_proto_depIdxs = []int32{
-	2, // 0: rpc.Tsunagi.Connect:input_type -> rpc.ConnectRequest
-	4, // 1: rpc.Tsunagi.DeliverMessage:input_type -> rpc.DeliverRequest
-	3, // 2: rpc.Tsunagi.ForwardMessage:input_type -> rpc.ForwardRequest
-	1, // 3: rpc.Tsunagi.Connect:output_type -> rpc.Event
-	0, // 4: rpc.Tsunagi.DeliverMessage:output_type -> rpc.Empty
-	0, // 5: rpc.Tsunagi.ForwardMessage:output_type -> rpc.Empty
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: rpc.Event.ForwardRequest:type_name -> rpc.ForwardRequest
+	7, // 1: rpc.Event.DeliverRequest:type_name -> rpc.DeliverRequest
+	0, // 2: rpc.Auth.GetChallenge:input_type -> rpc.AuthRequest
+	2, // 3: rpc.Auth.ProveChallenge:input_type -> rpc.AuthProof
+	5, // 4: rpc.Tsunagi.Connect:input_type -> rpc.Event
+	1, // 5: rpc.Auth.GetChallenge:output_type -> rpc.AuthChallenge
+	3, // 6: rpc.Auth.ProveChallenge:output_type -> rpc.AuthToken
+	5, // 7: rpc.Tsunagi.Connect:output_type -> rpc.Event
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_src_rpc_tsunagi_proto_init() }
@@ -328,15 +526,19 @@ func file_src_rpc_tsunagi_proto_init() {
 	if File_src_rpc_tsunagi_proto != nil {
 		return
 	}
+	file_src_rpc_tsunagi_proto_msgTypes[5].OneofWrappers = []any{
+		(*Event_ForwardRequest)(nil),
+		(*Event_DeliverRequest)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_src_rpc_tsunagi_proto_rawDesc), len(file_src_rpc_tsunagi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_src_rpc_tsunagi_proto_goTypes,
 		DependencyIndexes: file_src_rpc_tsunagi_proto_depIdxs,

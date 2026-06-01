@@ -25,7 +25,7 @@ func (i *Inbox) getBox(id data.Identifier) (Box, bool) {
 	return box, ok
 }
 
-func (i *Inbox) getBox2(id data.Identifier) (Box) {
+func (i *Inbox) getBox2(id data.Identifier) Box {
 
 	box, ok := i.getBox(id)
 

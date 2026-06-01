@@ -5,13 +5,27 @@ import (
 	"tsunagi/src/rpc"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type RelayApi struct {
 	rpc.UnimplementedTsunagiServer
+	rpc.UnimplementedAuthServer
 	inbox Inbox
 }
 
+func (this *RelayApi) ValidAuth(md metadata.MD) bool {
+
+	auth := md.Get("authorization")
+
+	if len(auth) == 0 {
+		return false
+	}
+
+	// TODO: check this
+
+	return true
+}
 func (this *RelayApi) Init() {
 
 	this.inbox = Inbox{
@@ -20,5 +34,6 @@ func (this *RelayApi) Init() {
 }
 
 func (this *RelayApi) Register(r *grpc.Server) {
+	rpc.RegisterAuthServer(r, this)
 	rpc.RegisterTsunagiServer(r, this)
 }

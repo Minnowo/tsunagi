@@ -8,23 +8,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.DeliverRequest) (*rpc.Empty, error) {
+func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.DeliverRequest) error {
 
 	var deviceID data.Identifier
 
 	if err := deviceID.FromBytes(req.DeviceID); err != nil {
-		return nil, err
+		return err
 	}
 
 	err := this.inbox.PutMsg(deviceID, req.CipherText)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	log.Info().
 		Hex("device", req.DeviceID[:]).
+		Bytes("mgs", req.CipherText[:]).
 		Msg("message was delivered to inbox")
 
-	return &rpc.Empty{}, nil
+	return nil
 }

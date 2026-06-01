@@ -20,21 +20,156 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Tsunagi_Connect_FullMethodName        = "/rpc.Tsunagi/Connect"
-	Tsunagi_DeliverMessage_FullMethodName = "/rpc.Tsunagi/DeliverMessage"
-	Tsunagi_ForwardMessage_FullMethodName = "/rpc.Tsunagi/ForwardMessage"
+	Auth_GetChallenge_FullMethodName   = "/rpc.Auth/GetChallenge"
+	Auth_ProveChallenge_FullMethodName = "/rpc.Auth/ProveChallenge"
+)
+
+// AuthClient is the client API for Auth service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AuthClient interface {
+	GetChallenge(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*AuthChallenge, error)
+	ProveChallenge(ctx context.Context, in *AuthProof, opts ...grpc.CallOption) (*AuthToken, error)
+}
+
+type authClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAuthClient(cc grpc.ClientConnInterface) AuthClient {
+	return &authClient{cc}
+}
+
+func (c *authClient) GetChallenge(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*AuthChallenge, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthChallenge)
+	err := c.cc.Invoke(ctx, Auth_GetChallenge_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) ProveChallenge(ctx context.Context, in *AuthProof, opts ...grpc.CallOption) (*AuthToken, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthToken)
+	err := c.cc.Invoke(ctx, Auth_ProveChallenge_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AuthServer is the server API for Auth service.
+// All implementations must embed UnimplementedAuthServer
+// for forward compatibility.
+type AuthServer interface {
+	GetChallenge(context.Context, *AuthRequest) (*AuthChallenge, error)
+	ProveChallenge(context.Context, *AuthProof) (*AuthToken, error)
+	mustEmbedUnimplementedAuthServer()
+}
+
+// UnimplementedAuthServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAuthServer struct{}
+
+func (UnimplementedAuthServer) GetChallenge(context.Context, *AuthRequest) (*AuthChallenge, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetChallenge not implemented")
+}
+func (UnimplementedAuthServer) ProveChallenge(context.Context, *AuthProof) (*AuthToken, error) {
+	return nil, status.Error(codes.Unimplemented, "method ProveChallenge not implemented")
+}
+func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
+func (UnimplementedAuthServer) testEmbeddedByValue()              {}
+
+// UnsafeAuthServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AuthServer will
+// result in compilation errors.
+type UnsafeAuthServer interface {
+	mustEmbedUnimplementedAuthServer()
+}
+
+func RegisterAuthServer(s grpc.ServiceRegistrar, srv AuthServer) {
+	// If the following call panics, it indicates UnimplementedAuthServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&Auth_ServiceDesc, srv)
+}
+
+func _Auth_GetChallenge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).GetChallenge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_GetChallenge_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).GetChallenge(ctx, req.(*AuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_ProveChallenge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthProof)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).ProveChallenge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_ProveChallenge_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).ProveChallenge(ctx, req.(*AuthProof))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Auth_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "rpc.Auth",
+	HandlerType: (*AuthServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetChallenge",
+			Handler:    _Auth_GetChallenge_Handler,
+		},
+		{
+			MethodName: "ProveChallenge",
+			Handler:    _Auth_ProveChallenge_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "src/rpc/tsunagi.proto",
+}
+
+const (
+	Tsunagi_Connect_FullMethodName = "/rpc.Tsunagi/Connect"
 )
 
 // TsunagiClient is the client API for Tsunagi service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TsunagiClient interface {
-	// Connect is when the client subs for their messages
-	Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
-	// DeliverMessage puts a message in an inbox
-	DeliverMessage(ctx context.Context, in *DeliverRequest, opts ...grpc.CallOption) (*Empty, error)
-	// ForwardMessage calls DeliverMessage on the target address
-	ForwardMessage(ctx context.Context, in *ForwardRequest, opts ...grpc.CallOption) (*Empty, error)
+	// Connect creates a two-way tunnel for sharing events.
+	// The connecting party must verify they are a client or relay.
+	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, Event], error)
 }
 
 type tsunagiClient struct {
@@ -45,55 +180,26 @@ func NewTsunagiClient(cc grpc.ClientConnInterface) TsunagiClient {
 	return &tsunagiClient{cc}
 }
 
-func (c *tsunagiClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error) {
+func (c *tsunagiClient) Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, Event], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Tsunagi_ServiceDesc.Streams[0], Tsunagi_Connect_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ConnectRequest, Event]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
+	x := &grpc.GenericClientStream[Event, Event]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectClient = grpc.ServerStreamingClient[Event]
-
-func (c *tsunagiClient) DeliverMessage(ctx context.Context, in *DeliverRequest, opts ...grpc.CallOption) (*Empty, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, Tsunagi_DeliverMessage_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *tsunagiClient) ForwardMessage(ctx context.Context, in *ForwardRequest, opts ...grpc.CallOption) (*Empty, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, Tsunagi_ForwardMessage_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
+type Tsunagi_ConnectClient = grpc.BidiStreamingClient[Event, Event]
 
 // TsunagiServer is the server API for Tsunagi service.
 // All implementations must embed UnimplementedTsunagiServer
 // for forward compatibility.
 type TsunagiServer interface {
-	// Connect is when the client subs for their messages
-	Connect(*ConnectRequest, grpc.ServerStreamingServer[Event]) error
-	// DeliverMessage puts a message in an inbox
-	DeliverMessage(context.Context, *DeliverRequest) (*Empty, error)
-	// ForwardMessage calls DeliverMessage on the target address
-	ForwardMessage(context.Context, *ForwardRequest) (*Empty, error)
+	// Connect creates a two-way tunnel for sharing events.
+	// The connecting party must verify they are a client or relay.
+	Connect(grpc.BidiStreamingServer[Event, Event]) error
 	mustEmbedUnimplementedTsunagiServer()
 }
 
@@ -104,14 +210,8 @@ type TsunagiServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTsunagiServer struct{}
 
-func (UnimplementedTsunagiServer) Connect(*ConnectRequest, grpc.ServerStreamingServer[Event]) error {
+func (UnimplementedTsunagiServer) Connect(grpc.BidiStreamingServer[Event, Event]) error {
 	return status.Error(codes.Unimplemented, "method Connect not implemented")
-}
-func (UnimplementedTsunagiServer) DeliverMessage(context.Context, *DeliverRequest) (*Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeliverMessage not implemented")
-}
-func (UnimplementedTsunagiServer) ForwardMessage(context.Context, *ForwardRequest) (*Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method ForwardMessage not implemented")
 }
 func (UnimplementedTsunagiServer) mustEmbedUnimplementedTsunagiServer() {}
 func (UnimplementedTsunagiServer) testEmbeddedByValue()                 {}
@@ -135,51 +235,11 @@ func RegisterTsunagiServer(s grpc.ServiceRegistrar, srv TsunagiServer) {
 }
 
 func _Tsunagi_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ConnectRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(TsunagiServer).Connect(m, &grpc.GenericServerStream[ConnectRequest, Event]{ServerStream: stream})
+	return srv.(TsunagiServer).Connect(&grpc.GenericServerStream[Event, Event]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectServer = grpc.ServerStreamingServer[Event]
-
-func _Tsunagi_DeliverMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeliverRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TsunagiServer).DeliverMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Tsunagi_DeliverMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TsunagiServer).DeliverMessage(ctx, req.(*DeliverRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Tsunagi_ForwardMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ForwardRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TsunagiServer).ForwardMessage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Tsunagi_ForwardMessage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TsunagiServer).ForwardMessage(ctx, req.(*ForwardRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
+type Tsunagi_ConnectServer = grpc.BidiStreamingServer[Event, Event]
 
 // Tsunagi_ServiceDesc is the grpc.ServiceDesc for Tsunagi service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -187,21 +247,13 @@ func _Tsunagi_ForwardMessage_Handler(srv interface{}, ctx context.Context, dec f
 var Tsunagi_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "rpc.Tsunagi",
 	HandlerType: (*TsunagiServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "DeliverMessage",
-			Handler:    _Tsunagi_DeliverMessage_Handler,
-		},
-		{
-			MethodName: "ForwardMessage",
-			Handler:    _Tsunagi_ForwardMessage_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Connect",
 			Handler:       _Tsunagi_Connect_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "src/rpc/tsunagi.proto",

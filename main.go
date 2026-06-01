@@ -79,57 +79,6 @@ func main() {
 							},
 						},
 					},
-					{
-						Name:   "dmsg",
-						Usage:  "Deliver a message",
-						Action: cmd.CmdClientDeliverMsg,
-						Flags: []cli.Flag{
-							&cli.StringFlag{
-								Name:     "addr",
-								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
-								Required: true,
-							},
-							&cli.StringFlag{
-								Name:     "device",
-								Usage:    "The target device ID",
-								Value:    "0000000000000000000000000000000000000000000",
-								Required: false,
-							},
-							&cli.StringFlag{
-								Name:     "msg",
-								Usage:    "The message to send",
-								Required: true,
-							},
-						},
-					},
-					{
-						Name:   "fmsg",
-						Usage:  "Forward a message",
-						Action: cmd.CmdClientForwardMsg,
-						Flags: []cli.Flag{
-							&cli.StringFlag{
-								Name:     "addr1",
-								Usage:    "The remote address (e.g. localhost:7471)",
-								Required: true,
-							},
-							&cli.StringFlag{
-								Name:     "addr2",
-								Usage:    "The address to forward the message (e.g. localhost:7472)",
-								Required: true,
-							},
-							&cli.StringFlag{
-								Name:     "device",
-								Usage:    "The target device ID",
-								Value:    "0000000000000000000000000000000000000000000",
-								Required: false,
-							},
-							&cli.StringFlag{
-								Name:     "msg",
-								Usage:    "The message to send",
-								Required: true,
-							},
-						},
-					},
 				},
 			},
 		},
