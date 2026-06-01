@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"io"
 	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
@@ -11,12 +12,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func CmdClientDeliverMsg(ctx context.Context, c *cli.Command) error {
+func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 
 	address := c.Value("addr").(string)
 	device := c.Value("device").(string)
-	msg := c.Value("msg").(string)
-	println(address)
 
 	var deviceID data.Identifier
 
@@ -37,18 +36,30 @@ func CmdClientDeliverMsg(ctx context.Context, c *cli.Command) error {
 
 	client := rpc.NewTsunagiClient(conn)
 
-	_, err = client.DeliverMessage(ctx, &rpc.DeliverRequest{
-		DeviceID:   deviceID[:],
-		CipherText: []byte(msg),
-	})
+	req := rpc.ConnectRequest{
+		DeviceID: deviceID[:],
+	}
+
+	stream, err := client.Connect(context.Background(), &req)
 
 	if err != nil {
 		return err
 	}
 
-	log.Info().
-		Str("addr", address).
-		Msg("delivered message via gRPC")
+	for {
+		evt, err := stream.Recv()
+
+		if err == io.EOF {
+			log.Info().Msg("server gave EOF")
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		log.Info().Bytes("msg", evt.GetCipherText()).Msg("got message")
+	}
 
 	return nil
 }

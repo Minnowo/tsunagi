@@ -12,14 +12,13 @@ type RelayApi struct {
 	inbox Inbox
 }
 
-func (this*RelayApi) Init() {
+func (this *RelayApi) Init() {
 
-	this.inbox = Inbox{ 
-		inbox:map[data.Identifier]Box{},
+	this.inbox = Inbox{
+		inbox: map[data.Identifier]Box{},
 	}
 }
 
-func (this*RelayApi) Register(r *grpc.Server) {
+func (this *RelayApi) Register(r *grpc.Server) {
 	rpc.RegisterTsunagiServer(r, this)
 }
-

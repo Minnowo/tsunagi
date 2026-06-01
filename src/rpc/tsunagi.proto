@@ -5,19 +5,33 @@ option go_package = "tsunagi/src/rpc";
 package rpc;
 
 service Tsunagi {
+  // Connect is when the client subs for their messages
+  rpc Connect(ConnectRequest) returns (stream Event) {}
+
+  // DeliverMessage puts a message in an inbox
   rpc DeliverMessage(DeliverRequest) returns (Empty) {}
+
+  // ForwardMessage calls DeliverMessage on the target address
   rpc ForwardMessage(ForwardRequest) returns (Empty) {}
 }
 
 message Empty {}
 
+message Event {
+  bytes  CipherText = 1;
+}
+
+message ConnectRequest {
+  bytes  DeviceID   = 1; // 32 bytes
+}
+
 message ForwardRequest {
-  bytes  DeviceID   = 1;
+  bytes  DeviceID   = 1; // 32 bytes
   string RelayAddr  = 2;
   bytes  CipherText = 3;
 }
 
 message DeliverRequest {
-  bytes  DeviceID   = 1;
+  bytes  DeviceID   = 1; // 32 bytes
   bytes  CipherText = 2;
 }

@@ -78,4 +78,3 @@ func WriteJSONArr[T any](w http.ResponseWriter, arr []T) {
 		logger.Debug().Err(err).Msg("error while writing json array response")
 	}
 }
-

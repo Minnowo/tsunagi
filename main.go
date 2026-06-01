@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func main(){
+func main() {
 
 	log4zero.Init("./log-config.json")
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
@@ -38,7 +38,7 @@ func main(){
 				Name:        "run",
 				Usage:       "Run the server",
 				Description: "",
-				Action: cmd.CmdServerMain,
+				Action:      cmd.CmdServerMain,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "host",
@@ -62,8 +62,26 @@ func main(){
 				Description: "",
 				Commands: []*cli.Command{
 					{
-						Name:        "dmsg",
-						Usage:       "Deliver a message",
+						Name:   "connect",
+						Usage:  "Connect to recieve updates",
+						Action: cmd.CmdClientConnect,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "addr",
+								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "device",
+								Usage:    "The target device ID",
+								Value:    "0000000000000000000000000000000000000000000",
+								Required: false,
+							},
+						},
+					},
+					{
+						Name:   "dmsg",
+						Usage:  "Deliver a message",
 						Action: cmd.CmdClientDeliverMsg,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
@@ -75,7 +93,7 @@ func main(){
 								Name:     "device",
 								Usage:    "The target device ID",
 								Value:    "0000000000000000000000000000000000000000000",
-								Required:false,
+								Required: false,
 							},
 							&cli.StringFlag{
 								Name:     "msg",
@@ -85,8 +103,8 @@ func main(){
 						},
 					},
 					{
-						Name:        "fmsg",
-						Usage:       "Forward a message",
+						Name:   "fmsg",
+						Usage:  "Forward a message",
 						Action: cmd.CmdClientForwardMsg,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
@@ -103,7 +121,7 @@ func main(){
 								Name:     "device",
 								Usage:    "The target device ID",
 								Value:    "0000000000000000000000000000000000000000000",
-								Required:false,
+								Required: false,
 							},
 							&cli.StringFlag{
 								Name:     "msg",
@@ -114,7 +132,6 @@ func main(){
 					},
 				},
 			},
-
 		},
 	}
 
@@ -122,6 +139,3 @@ func main(){
 		log.Error().Err(err).Msg("")
 	}
 }
-
-
-

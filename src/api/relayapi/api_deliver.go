@@ -8,17 +8,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func(this*RelayApi) DeliverMessage(ctx context.Context, req *rpc.DeliverRequest) (*rpc.Empty, error) {
+func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.DeliverRequest) (*rpc.Empty, error) {
 
 	var deviceID data.Identifier
 
-	if err := deviceID.FromBytes(req.DeviceID) ; err != nil {
+	if err := deviceID.FromBytes(req.DeviceID); err != nil {
 		return nil, err
 	}
 
 	err := this.inbox.PutMsg(deviceID, req.CipherText)
 
-	if err != nil  {
+	if err != nil {
 		return nil, err
 	}
 

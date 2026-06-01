@@ -22,7 +22,7 @@ func (id *Identifier) FromBytes(buf []byte) error {
 		return fmt.Errorf("invalid identifier length: must be 32 bytes")
 	}
 
-	copy(id[:],buf)
+	copy(id[:], buf)
 	return nil
 }
 

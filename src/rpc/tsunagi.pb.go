@@ -7,11 +7,12 @@
 package rpc
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -57,9 +58,97 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{0}
 }
 
+type Event struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CipherText    []byte                 `protobuf:"bytes,1,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Event) Reset() {
+	*x = Event{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Event) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Event) ProtoMessage() {}
+
+func (x *Event) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Event.ProtoReflect.Descriptor instead.
+func (*Event) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Event) GetCipherText() []byte {
+	if x != nil {
+		return x.CipherText
+	}
+	return nil
+}
+
+type ConnectRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectRequest) Reset() {
+	*x = ConnectRequest{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectRequest) ProtoMessage() {}
+
+func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectRequest.ProtoReflect.Descriptor instead.
+func (*ConnectRequest) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ConnectRequest) GetDeviceID() []byte {
+	if x != nil {
+		return x.DeviceID
+	}
+	return nil
+}
+
 type ForwardRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"`
+	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
 	RelayAddr     string                 `protobuf:"bytes,2,opt,name=RelayAddr,proto3" json:"RelayAddr,omitempty"`
 	CipherText    []byte                 `protobuf:"bytes,3,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -68,7 +157,7 @@ type ForwardRequest struct {
 
 func (x *ForwardRequest) Reset() {
 	*x = ForwardRequest{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -80,7 +169,7 @@ func (x *ForwardRequest) String() string {
 func (*ForwardRequest) ProtoMessage() {}
 
 func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[1]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -93,7 +182,7 @@ func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardRequest.ProtoReflect.Descriptor instead.
 func (*ForwardRequest) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{1}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ForwardRequest) GetDeviceID() []byte {
@@ -119,7 +208,7 @@ func (x *ForwardRequest) GetCipherText() []byte {
 
 type DeliverRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"`
+	DeviceID      []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
 	CipherText    []byte                 `protobuf:"bytes,2,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -127,7 +216,7 @@ type DeliverRequest struct {
 
 func (x *DeliverRequest) Reset() {
 	*x = DeliverRequest{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -139,7 +228,7 @@ func (x *DeliverRequest) String() string {
 func (*DeliverRequest) ProtoMessage() {}
 
 func (x *DeliverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[2]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -152,7 +241,7 @@ func (x *DeliverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliverRequest.ProtoReflect.Descriptor instead.
 func (*DeliverRequest) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{2}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeliverRequest) GetDeviceID() []byte {
@@ -174,7 +263,13 @@ var File_src_rpc_tsunagi_proto protoreflect.FileDescriptor
 const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\n" +
 	"\x15src/rpc/tsunagi.proto\x12\x03rpc\"\a\n" +
-	"\x05Empty\"j\n" +
+	"\x05Empty\"'\n" +
+	"\x05Event\x12\x1e\n" +
+	"\n" +
+	"CipherText\x18\x01 \x01(\fR\n" +
+	"CipherText\",\n" +
+	"\x0eConnectRequest\x12\x1a\n" +
+	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\"j\n" +
 	"\x0eForwardRequest\x12\x1a\n" +
 	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x1c\n" +
 	"\tRelayAddr\x18\x02 \x01(\tR\tRelayAddr\x12\x1e\n" +
@@ -185,8 +280,10 @@ const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x1e\n" +
 	"\n" +
 	"CipherText\x18\x02 \x01(\fR\n" +
-	"CipherText2s\n" +
-	"\aTsunagi\x123\n" +
+	"CipherText2\xa3\x01\n" +
+	"\aTsunagi\x12.\n" +
+	"\aConnect\x12\x13.rpc.ConnectRequest\x1a\n" +
+	".rpc.Event\"\x000\x01\x123\n" +
 	"\x0eDeliverMessage\x12\x13.rpc.DeliverRequest\x1a\n" +
 	".rpc.Empty\"\x00\x123\n" +
 	"\x0eForwardMessage\x12\x13.rpc.ForwardRequest\x1a\n" +
@@ -204,19 +301,23 @@ func file_src_rpc_tsunagi_proto_rawDescGZIP() []byte {
 	return file_src_rpc_tsunagi_proto_rawDescData
 }
 
-var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_src_rpc_tsunagi_proto_goTypes = []any{
 	(*Empty)(nil),          // 0: rpc.Empty
-	(*ForwardRequest)(nil), // 1: rpc.ForwardRequest
-	(*DeliverRequest)(nil), // 2: rpc.DeliverRequest
+	(*Event)(nil),          // 1: rpc.Event
+	(*ConnectRequest)(nil), // 2: rpc.ConnectRequest
+	(*ForwardRequest)(nil), // 3: rpc.ForwardRequest
+	(*DeliverRequest)(nil), // 4: rpc.DeliverRequest
 }
 var file_src_rpc_tsunagi_proto_depIdxs = []int32{
-	2, // 0: rpc.Tsunagi.DeliverMessage:input_type -> rpc.DeliverRequest
-	1, // 1: rpc.Tsunagi.ForwardMessage:input_type -> rpc.ForwardRequest
-	0, // 2: rpc.Tsunagi.DeliverMessage:output_type -> rpc.Empty
-	0, // 3: rpc.Tsunagi.ForwardMessage:output_type -> rpc.Empty
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	2, // 0: rpc.Tsunagi.Connect:input_type -> rpc.ConnectRequest
+	4, // 1: rpc.Tsunagi.DeliverMessage:input_type -> rpc.DeliverRequest
+	3, // 2: rpc.Tsunagi.ForwardMessage:input_type -> rpc.ForwardRequest
+	1, // 3: rpc.Tsunagi.Connect:output_type -> rpc.Event
+	0, // 4: rpc.Tsunagi.DeliverMessage:output_type -> rpc.Empty
+	0, // 5: rpc.Tsunagi.ForwardMessage:output_type -> rpc.Empty
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -233,7 +334,7 @@ func file_src_rpc_tsunagi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_src_rpc_tsunagi_proto_rawDesc), len(file_src_rpc_tsunagi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

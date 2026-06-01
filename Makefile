@@ -9,3 +9,7 @@ protobuf:
 		--go-grpc_opt=paths=source_relative \
 		./src/rpc/tsunagi.proto
 
+format:
+	gofmt -w -s .
+	goimports -w .
+

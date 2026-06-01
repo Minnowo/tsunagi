@@ -9,25 +9,25 @@ import (
 var ErrInboxFull = fmt.Errorf("inbox is full")
 var ErrInboxNotFound = fmt.Errorf("inbox not found")
 
-type Box struct{
+type Box struct {
 	Pipe chan []byte
 }
 
 type Inbox struct {
-	mu sync.RWMutex
+	mu    sync.RWMutex
 	inbox map[data.Identifier]Box
 }
 
 func (i *Inbox) getBox(id data.Identifier) (Box, bool) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	box , ok := i.inbox[id] 
-	return	box , ok
+	box, ok := i.inbox[id]
+	return box, ok
 }
 
-func(i *Inbox) PutMsg(id data.Identifier, msg []byte) error {
+func (i *Inbox) getBox2(id data.Identifier) (Box) {
 
-	box , ok := i.getBox(id)
+	box, ok := i.getBox(id)
 
 	if !ok {
 
@@ -43,6 +43,13 @@ func(i *Inbox) PutMsg(id data.Identifier, msg []byte) error {
 		}()
 	}
 
+	return box
+}
+
+func (i *Inbox) PutMsg(id data.Identifier, msg []byte) error {
+
+	box := i.getBox2(id)
+
 	select {
 	case box.Pipe <- msg:
 		return nil
@@ -51,13 +58,9 @@ func(i *Inbox) PutMsg(id data.Identifier, msg []byte) error {
 	}
 }
 
-func(i *Inbox) GetReadPipe(id data.Identifier) ( <-chan []byte, error) {
+func (i *Inbox) GetReadPipe(id data.Identifier) (<-chan []byte, error) {
 
-	box, ok := i.getBox(id)
-
-	if !ok {
-		return nil, ErrInboxNotFound
-	}
+	box := i.getBox2(id)
 
 	return box.Pipe, nil
 }

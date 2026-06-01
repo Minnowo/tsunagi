@@ -20,7 +20,7 @@ func CmdClientForwardMsg(ctx context.Context, c *cli.Command) error {
 
 	var deviceID data.Identifier
 
-	if err := deviceID.FromString(device); err!=nil{
+	if err := deviceID.FromString(device); err != nil {
 		return err
 	}
 
@@ -32,13 +32,13 @@ func CmdClientForwardMsg(ctx context.Context, c *cli.Command) error {
 	if err != nil {
 		return err
 	}
-    
+
 	defer conn.Close()
 
-    client := rpc.NewTsunagiClient(conn)
+	client := rpc.NewTsunagiClient(conn)
 
 	_, err = client.ForwardMessage(ctx, &rpc.ForwardRequest{
-		RelayAddr: address2,
+		RelayAddr:  address2,
 		DeviceID:   deviceID[:],
 		CipherText: []byte(msg),
 	})

@@ -23,7 +23,7 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 	}
 
 	s := grpc.NewServer()
-	
+
 	server := relayapi.RelayApi{}
 	server.Init()
 	server.Register(s)
@@ -33,7 +33,6 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 	if err := s.Serve(lis); err != nil {
 		return err
 	}
-
 
 	// // Each node is a symmetric peer in the network.
 	// // Every node runs both an HTTP server (to receive requests)
@@ -92,7 +91,6 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 	// r.Post("/inbox", tmp)
 
 	// r.Get("/", tmp)
-
 
 	// http.ListenAndServe(":3000", r)
 

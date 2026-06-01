@@ -8,6 +8,7 @@ package rpc
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	Tsunagi_Connect_FullMethodName        = "/rpc.Tsunagi/Connect"
 	Tsunagi_DeliverMessage_FullMethodName = "/rpc.Tsunagi/DeliverMessage"
 	Tsunagi_ForwardMessage_FullMethodName = "/rpc.Tsunagi/ForwardMessage"
 )
@@ -27,7 +29,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TsunagiClient interface {
+	// Connect is when the client subs for their messages
+	Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error)
+	// DeliverMessage puts a message in an inbox
 	DeliverMessage(ctx context.Context, in *DeliverRequest, opts ...grpc.CallOption) (*Empty, error)
+	// ForwardMessage calls DeliverMessage on the target address
 	ForwardMessage(ctx context.Context, in *ForwardRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -38,6 +44,25 @@ type tsunagiClient struct {
 func NewTsunagiClient(cc grpc.ClientConnInterface) TsunagiClient {
 	return &tsunagiClient{cc}
 }
+
+func (c *tsunagiClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Event], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Tsunagi_ServiceDesc.Streams[0], Tsunagi_Connect_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ConnectRequest, Event]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Tsunagi_ConnectClient = grpc.ServerStreamingClient[Event]
 
 func (c *tsunagiClient) DeliverMessage(ctx context.Context, in *DeliverRequest, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -63,7 +88,11 @@ func (c *tsunagiClient) ForwardMessage(ctx context.Context, in *ForwardRequest, 
 // All implementations must embed UnimplementedTsunagiServer
 // for forward compatibility.
 type TsunagiServer interface {
+	// Connect is when the client subs for their messages
+	Connect(*ConnectRequest, grpc.ServerStreamingServer[Event]) error
+	// DeliverMessage puts a message in an inbox
 	DeliverMessage(context.Context, *DeliverRequest) (*Empty, error)
+	// ForwardMessage calls DeliverMessage on the target address
 	ForwardMessage(context.Context, *ForwardRequest) (*Empty, error)
 	mustEmbedUnimplementedTsunagiServer()
 }
@@ -75,6 +104,9 @@ type TsunagiServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTsunagiServer struct{}
 
+func (UnimplementedTsunagiServer) Connect(*ConnectRequest, grpc.ServerStreamingServer[Event]) error {
+	return status.Error(codes.Unimplemented, "method Connect not implemented")
+}
 func (UnimplementedTsunagiServer) DeliverMessage(context.Context, *DeliverRequest) (*Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeliverMessage not implemented")
 }
@@ -101,6 +133,17 @@ func RegisterTsunagiServer(s grpc.ServiceRegistrar, srv TsunagiServer) {
 	}
 	s.RegisterService(&Tsunagi_ServiceDesc, srv)
 }
+
+func _Tsunagi_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ConnectRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TsunagiServer).Connect(m, &grpc.GenericServerStream[ConnectRequest, Event]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Tsunagi_ConnectServer = grpc.ServerStreamingServer[Event]
 
 func _Tsunagi_DeliverMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeliverRequest)
@@ -154,6 +197,12 @@ var Tsunagi_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Tsunagi_ForwardMessage_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Connect",
+			Handler:       _Tsunagi_Connect_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "src/rpc/tsunagi.proto",
 }
