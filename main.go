@@ -57,6 +57,28 @@ func main() {
 				},
 			},
 			{
+				Name:        "client-server",
+				Usage:       "Run the client WebSocket server",
+				Description: "",
+				Action:      cmd.CmdClientServerMain,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "host",
+						Aliases:  []string{"b"},
+						Usage:    "Bind to this host",
+						Value:    "0.0.0.0",
+						Required: false,
+					},
+					&cli.Uint32Flag{
+						Name:     "port",
+						Aliases:  []string{"p"},
+						Usage:    "Bind to this port",
+						Value:    8080,
+						Required: false,
+					},
+				},
+			},
+			{
 				Name:        "client",
 				Usage:       "Commandline client",
 				Description: "",
