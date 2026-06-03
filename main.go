@@ -81,6 +81,31 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:        "relay",
+				Usage:       "Commandline client",
+				Description: "",
+				Commands: []*cli.Command{
+					{
+						Name:   "connect",
+						Usage:  "Connect to recieve updates",
+						Action: cmd.CmdRelayConnect,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "addr",
+								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "device",
+								Usage:    "The target device ID",
+								Value:    "0000000000000000000000000000000000000000000",
+								Required: false,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 

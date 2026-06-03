@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func CmdClientConnect(ctx context.Context, c *cli.Command) error {
+func CmdRelayConnect(ctx context.Context, c *cli.Command) error {
 
 	address := c.Value("addr").(string)
 	device := c.Value("device").(string)
@@ -24,27 +24,9 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	client := client.NewClientRelayClient(0)
+	client := client.NewRelayRelayClient(0)
 
 	log.Info().Msg("connected - type messages, 'exit' to quit")
-
-	go func() {
-		read, exit, err := client.GetReadHandle(address)
-
-		if err != nil {
-			log.Panic().Err(err).Msg("could not get read handle on stream")
-		}
-
-		for {
-			select {
-			case event := <-read:
-				log.Info().Interface("event", event).Msg("read event")
-			case <-exit:
-				log.Info().Msg("client shutdown")
-				return
-			}
-		}
-	}()
 
 	reader := bufio.NewReader(os.Stdin)
 

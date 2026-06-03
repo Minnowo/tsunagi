@@ -1,6 +1,7 @@
 package relayapi
 
 import (
+	"tsunagi/src/client"
 	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
@@ -12,6 +13,7 @@ type RelayApi struct {
 	rpc.UnimplementedTsunagiServer
 	rpc.UnimplementedAuthServer
 	inbox Inbox
+	relayClient *client.RelayRelayClient
 }
 
 func (this *RelayApi) ValidAuth(md metadata.MD) bool {
@@ -31,6 +33,8 @@ func (this *RelayApi) Init() {
 	this.inbox = Inbox{
 		inbox: map[data.Identifier]Box{},
 	}
+
+	this.relayClient = client.NewRelayRelayClient(50)
 }
 
 func (this *RelayApi) Register(r *grpc.Server) {

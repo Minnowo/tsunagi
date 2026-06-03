@@ -27,38 +27,20 @@ func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ForwardReques
 	case "grpc", "tcp", "http", "https", "dns":
 
 		// // gRPC ignores http/https scheme semantics; we just use host:port
-		// address := relayAddr.Host
-		// if address == "" {
-		// 	return nil, fmt.Errorf("missing host in relay address")
-		// }
+		address := relayAddr.Host
 
-		// log.Info().Str("addr", address).Msg("forwarding to")
+		if address == "" {
+			return fmt.Errorf("missing host in relay address")
+		}
 
-		// conn, err := grpc.NewClient(
-		// 	address,
-		// 	grpc.WithTransportCredentials(insecure.NewCredentials()),
-		// )
+		err := this.relayClient.DeliverMsg(address, &rpc.DeliverRequest{
+			DeviceID:   req.DeviceID,
+			CipherText: req.CipherText,
+		})
 
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// defer conn.Close()
-
-		// client := rpc.NewTsunagiClient(conn)
-
-		// _, err = client.DeliverMessage(ctx, &rpc.DeliverRequest{
-		// 	DeviceID:   req.DeviceID,
-		// 	CipherText: req.CipherText,
-		// })
-
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		// log.Info().
-		// 	Str("addr", address).
-		// 	Bytes("text", req.CipherText).
-		// 	Msg("delivered message via gRPC")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

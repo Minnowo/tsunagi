@@ -476,9 +476,12 @@ const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"CipherText2r\n" +
 	"\x04Auth\x126\n" +
 	"\fGetChallenge\x12\x10.rpc.AuthRequest\x1a\x12.rpc.AuthChallenge\"\x00\x122\n" +
-	"\x0eProveChallenge\x12\x0e.rpc.AuthProof\x1a\x0e.rpc.AuthToken\"\x0022\n" +
-	"\aTsunagi\x12'\n" +
-	"\aConnect\x12\n" +
+	"\x0eProveChallenge\x12\x0e.rpc.AuthProof\x1a\x0e.rpc.AuthToken\"\x002d\n" +
+	"\aTsunagi\x12*\n" +
+	"\fConnectRelay\x12\n" +
+	".rpc.Event\x1a\n" +
+	".rpc.Empty\"\x00(\x01\x12-\n" +
+	"\rConnectClient\x12\n" +
 	".rpc.Event\x1a\n" +
 	".rpc.Event\"\x00(\x010\x01B\x11Z\x0ftsunagi/src/rpcb\x06proto3"
 
@@ -510,12 +513,14 @@ var file_src_rpc_tsunagi_proto_depIdxs = []int32{
 	7, // 1: rpc.Event.DeliverRequest:type_name -> rpc.DeliverRequest
 	0, // 2: rpc.Auth.GetChallenge:input_type -> rpc.AuthRequest
 	2, // 3: rpc.Auth.ProveChallenge:input_type -> rpc.AuthProof
-	5, // 4: rpc.Tsunagi.Connect:input_type -> rpc.Event
-	1, // 5: rpc.Auth.GetChallenge:output_type -> rpc.AuthChallenge
-	3, // 6: rpc.Auth.ProveChallenge:output_type -> rpc.AuthToken
-	5, // 7: rpc.Tsunagi.Connect:output_type -> rpc.Event
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
+	5, // 4: rpc.Tsunagi.ConnectRelay:input_type -> rpc.Event
+	5, // 5: rpc.Tsunagi.ConnectClient:input_type -> rpc.Event
+	1, // 6: rpc.Auth.GetChallenge:output_type -> rpc.AuthChallenge
+	3, // 7: rpc.Auth.ProveChallenge:output_type -> rpc.AuthToken
+	4, // 8: rpc.Tsunagi.ConnectRelay:output_type -> rpc.Empty
+	5, // 9: rpc.Tsunagi.ConnectClient:output_type -> rpc.Event
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name

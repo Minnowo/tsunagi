@@ -38,9 +38,15 @@ message AuthToken {
 
 
 service Tsunagi {
-  // Connect creates a two-way tunnel for sharing events.
-  // The connecting party must verify they are a client or relay.
-  rpc Connect(stream Event) returns (stream Event) {}
+
+  // ConnectRelay is for a relay to connect to another relay.
+  // This should be used for relay message passing, since a relay never needs to recieve events.
+  rpc ConnectRelay(stream Event) returns (Empty) {}
+
+  // ConnectClient is for a client to connect with a relay.
+  // This should be used when the connecting client wants to also recieve events from the server.
+  // If they only plan on pushing events, they should use ConnectRelay instead.
+  rpc ConnectClient(stream Event) returns (stream Event) {}
 }
 
 message Empty {}
