@@ -12,7 +12,7 @@ import (
 type RelayApi struct {
 	rpc.UnimplementedTsunagiServer
 	rpc.UnimplementedAuthServer
-	inbox Inbox
+	inbox       Inbox
 	relayClient *client.RelayRelayClient
 }
 

@@ -1,15 +1,43 @@
 package data
 
 import (
-	"encoding/base64"
+	"crypto/rand"
+	"database/sql/driver"
+	"encoding/base32"
 	"encoding/json"
 	"fmt"
 )
 
+var strEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)
+
 type Identifier [32]byte
 
+func (id *Identifier) GenNew() {
+	rand.Read(id[:])
+}
+
 func (id Identifier) String() string {
-	return base64.RawURLEncoding.EncodeToString(id[:])
+	return strEncoding.EncodeToString(id[:])
+}
+
+func (id *Identifier) FromString(s string) error {
+
+	if len(id) == 0 {
+		return fmt.Errorf("nil Identifier receiver")
+	}
+
+	decoded, err := strEncoding.DecodeString(s)
+
+	if err != nil {
+		return err
+	}
+
+	if len(decoded) != len(id) {
+		return fmt.Errorf("invalid identifier length: must be 32 bytes")
+	}
+
+	copy(id[:], decoded)
+	return nil
 }
 
 func (id *Identifier) FromBytes(buf []byte) error {
@@ -26,29 +54,31 @@ func (id *Identifier) FromBytes(buf []byte) error {
 	return nil
 }
 
-func (id *Identifier) FromString(s string) error {
 
-	if len(id) == 0 {
+func (id Identifier) Value() (driver.Value, error) {
+	return id[:], nil
+}
+
+func (id *Identifier) Scan(value any) error {
+	if id == nil {
 		return fmt.Errorf("nil Identifier receiver")
 	}
 
-	decoded, err := base64.RawURLEncoding.DecodeString(s)
+	switch v := value.(type) {
+	case []byte:
+		if len(v) != len(id) {
+			return fmt.Errorf("invalid identifier length: expected 32 bytes, got %d", len(v))
+		}
+		copy(id[:], v)
+		return nil
 
-	if err != nil {
-		return err
+	default:
+		return fmt.Errorf("unsupported type for Identifier: %T", value)
 	}
-
-	if len(decoded) != len(id) {
-		return fmt.Errorf("invalid identifier length: must be 32 bytes")
-	}
-
-	copy(id[:], decoded)
-	return nil
 }
 
 func (id Identifier) MarshalJSON() ([]byte, error) {
-	encoded := base64.RawURLEncoding.EncodeToString(id[:])
-	return json.Marshal(encoded)
+	return json.Marshal(id.String())
 }
 
 func (id *Identifier) UnmarshalJSON(data []byte) error {
