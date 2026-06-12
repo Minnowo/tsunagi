@@ -23,7 +23,7 @@ var (
 
 func JsErr(err error) map[string]any {
 	return map[string]any{
-		"err": err,
+		"err": err.Error(),
 		"res": nil,
 	}
 }
