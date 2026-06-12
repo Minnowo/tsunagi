@@ -8,7 +8,8 @@ import (
 	"tsunagi/src/api"
 	"tsunagi/src/data"
 	"tsunagi/src/database"
-	"tsunagi/src/tcrypto"
+
+	"github.com/minnowo/tsunagi/mod/tcrypto"
 
 	"github.com/flynn/noise"
 	"github.com/rs/zerolog/log"

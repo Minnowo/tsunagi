@@ -20,7 +20,6 @@ func runDeviceSuite(t *testing.T, newDB NewDB) {
 		assert.NotZero(t, device.ID)
 	})
 
-
 	t.Run("AddDevice_UnknownUser_Errors", func(t *testing.T) {
 		db := newDB(t)
 		ctx := context.Background()

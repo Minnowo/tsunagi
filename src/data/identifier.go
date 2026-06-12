@@ -54,7 +54,6 @@ func (id *Identifier) FromBytes(buf []byte) error {
 	return nil
 }
 
-
 func (id Identifier) Value() (driver.Value, error) {
 	return id[:], nil
 }

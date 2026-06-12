@@ -7,7 +7,8 @@ import (
 	"tsunagi/src/api"
 	"tsunagi/src/data"
 	"tsunagi/src/database"
-	"tsunagi/src/tcrypto"
+
+	"github.com/minnowo/tsunagi/mod/tcrypto"
 
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +16,7 @@ import (
 func (this *ClientApi) apiLogin(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
-		UserID   data.Identifier `json:"user_id"`
+		DeviceID data.Identifier `json:"user_id"`
 		Password string          `json:"password"`
 	}
 
@@ -31,7 +32,7 @@ func (this *ClientApi) apiLogin(w http.ResponseWriter, r *http.Request) {
 
 	var userrow database.UserTable
 
-	if err := this.DB.LoadUserByIdentifier(r.Context(), this.DB.Sqlx(), req.UserID, &userrow); err != nil {
+	if err := this.DB.LoadUserByIdentifier(r.Context(), this.DB.Sqlx(), req.DeviceID, &userrow); err != nil {
 
 		if err == sql.ErrNoRows {
 			api.NotFound(w, "the user identity does not exist")
@@ -39,22 +40,22 @@ func (this *ClientApi) apiLogin(w http.ResponseWriter, r *http.Request) {
 			log.Error().Err(err).Msg("error loading user")
 			api.ServerErr(w, "error loading user")
 		}
-		return 
+		return
 	}
 
 	var prikey tcrypto.PasswordEncryptedData
-	
+
 	if err := prikey.FromBytes(userrow.EncryptedPriKey); err != nil {
 		log.Error().Err(err).Msg("error parsing encrypted data")
 		api.ServerErr(w, "error loading user")
-		return 
+		return
 	}
-	
+
 	privatekey, err := tcrypto.DecryptWithPassword(&prikey, []byte(req.Password))
 
 	if err != nil {
 		api.BadReq(w, "unable to decrypt")
-		return 
+		return
 	}
 
 	var user data.User
