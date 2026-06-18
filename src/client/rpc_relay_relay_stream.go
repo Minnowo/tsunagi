@@ -16,7 +16,7 @@ type RelayRelayStream struct {
 	didExit  bool
 
 	mu     sync.Mutex
-	stream grpc.ClientStreamingClient[rpc.Event, rpc.Empty]
+	stream grpc.ClientStreamingClient[rpc.RelayEvent, rpc.Empty]
 
 	// send events recieved on this channel are sent through RPC.
 	// This is never to be closed.
@@ -82,8 +82,15 @@ func (r *RelayRelayStream) IsConnected() bool {
 	return r.stream != nil
 }
 
-func (r *RelayRelayStream) rpcSend(req *rpc.Event) error {
-	return r.stream.Send(req)
+func (r *RelayRelayStream) rpcSend(req any) error {
+
+	reqq, ok := req.(*rpc.RelayEvent)
+
+	if !ok {
+		return ErrInvalidSendType
+	}
+
+	return r.stream.Send(reqq)
 }
 
 func (r *RelayRelayStream) disconnect() {

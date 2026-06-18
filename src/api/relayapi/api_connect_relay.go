@@ -1,7 +1,6 @@
 package relayapi
 
 import (
-	"context"
 	"io"
 	"tsunagi/src/rpc"
 
@@ -12,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.Event, rpc.Empty]) error {
+func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEvent, rpc.Empty]) error {
 
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
@@ -34,17 +33,6 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.Event, 
 			return err
 		}
 
-		switch v := event.Body.(type) {
-
-		case *rpc.Event_DeliverRequest:
-
-			dctx := context.Background()
-			this.DeliverMessage(dctx, v.DeliverRequest)
-
-		case *rpc.Event_ForwardRequest:
-
-			fctx := context.Background()
-			this.ForwardMessage(fctx, v.ForwardRequest)
-		}
+		this.DeliverMessage(stream.Context(), event)
 	}
 }

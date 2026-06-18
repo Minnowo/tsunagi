@@ -12,16 +12,17 @@ service Auth {
 // AuthRequest is sent by a client who wants to authenticate.
 // They will provide their identity and then wait to verify it.
 message AuthRequest {
-  bytes  DeviceID   = 1; // 32 bytes
-  bytes  PubKey     = 2; // public key
+  bytes  DeviceID             = 1; // 32 bytes
+  bytes  PubKey               = 2; // public key
+  bytes  HandshakeInitMsg     = 3; // noise IN step 1 handshake msg
 }
 
 // AuthChallenge is sent by the server to a connecting client.
 // They must solve it and provide a proof.
 message AuthChallenge {
-  // random string which much be signed by the private key
-  bytes  Nonce   = 1;
-  // proof of work??
+  bytes  HandshakeDoneMsg   = 1; // noise IN step 2 handshake msg
+  bytes  AuthChallenge      = 2; // encrypted challenge
+  // proof of work too??
 }
 
 // AuthProof is the solved challenge.
@@ -41,30 +42,40 @@ service Tsunagi {
 
   // ConnectRelay is for a relay to connect to another relay.
   // This should be used for relay message passing, since a relay never needs to recieve events.
-  rpc ConnectRelay(stream Event) returns (Empty) {}
+  rpc ConnectRelay(stream RelayEvent) returns (Empty) {}
 
   // ConnectClient is for a client to connect with a relay.
   // This should be used when the connecting client wants to also recieve events from the server.
   // If they only plan on pushing events, they should use ConnectRelay instead.
-  rpc ConnectClient(stream Event) returns (stream Event) {}
+  rpc ConnectClient(stream ClientEvent) returns (stream RelayEvent) {}
 }
 
 message Empty {}
 
-message Event {
+message ClientEvent {
+  bytes  DeviceID   = 1; // 32 bytes
+  string RelayAddr  = 2;
   oneof Body {
-    ForwardRequest  ForwardRequest = 1;
-    DeliverRequest  DeliverRequest = 2;
+    NoiseHandshake  NoiseHandshake = 3;
+    MessagePayload  MessagePayload = 4;
   }
 }
 
-message ForwardRequest {
+message RelayEvent {
   bytes  DeviceID   = 1; // 32 bytes
-  string RelayAddr  = 2;
-  bytes  CipherText = 3;
+  oneof Body {
+    NoiseHandshake  NoiseHandshake = 2;
+    MessagePayload  MessagePayload = 3;
+  }
 }
 
-message DeliverRequest {
-  bytes  DeviceID   = 1; // 32 bytes
-  bytes  CipherText = 2;
+// noise message to continue handshake with a client
+message NoiseHandshake {
+  bytes State = 1;
 }
+
+// encrypted message data for the recieving client
+message MessagePayload {
+  bytes CipherText = 1;
+}
+

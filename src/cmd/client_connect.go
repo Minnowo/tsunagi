@@ -74,18 +74,9 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 			return nil
 
 		case "forward":
-			err = client.ForwardMsg(address, &rpc.ForwardRequest{
-				DeviceID:   deviceID[:],
-				RelayAddr:  args[1],
+			err = client.ForwardMsg(address, deviceID[:], &rpc.MessagePayload{
 				CipherText: []byte(args[2]),
 			})
-
-		case "deliver":
-			err = client.DeliverMsg(address,
-				&rpc.DeliverRequest{
-					DeviceID:   deviceID[:],
-					CipherText: []byte(args[1]),
-				})
 		}
 
 		if err != nil {

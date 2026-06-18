@@ -8,7 +8,6 @@ package rpc
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -170,11 +169,11 @@ const (
 type TsunagiClient interface {
 	// ConnectRelay is for a relay to connect to another relay.
 	// This should be used for relay message passing, since a relay never needs to recieve events.
-	ConnectRelay(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Event, Empty], error)
+	ConnectRelay(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RelayEvent, Empty], error)
 	// ConnectClient is for a client to connect with a relay.
 	// This should be used when the connecting client wants to also recieve events from the server.
 	// If they only plan on pushing events, they should use ConnectRelay instead.
-	ConnectClient(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, Event], error)
+	ConnectClient(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ClientEvent, RelayEvent], error)
 }
 
 type tsunagiClient struct {
@@ -185,31 +184,31 @@ func NewTsunagiClient(cc grpc.ClientConnInterface) TsunagiClient {
 	return &tsunagiClient{cc}
 }
 
-func (c *tsunagiClient) ConnectRelay(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Event, Empty], error) {
+func (c *tsunagiClient) ConnectRelay(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RelayEvent, Empty], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Tsunagi_ServiceDesc.Streams[0], Tsunagi_ConnectRelay_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Event, Empty]{ClientStream: stream}
+	x := &grpc.GenericClientStream[RelayEvent, Empty]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectRelayClient = grpc.ClientStreamingClient[Event, Empty]
+type Tsunagi_ConnectRelayClient = grpc.ClientStreamingClient[RelayEvent, Empty]
 
-func (c *tsunagiClient) ConnectClient(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Event, Event], error) {
+func (c *tsunagiClient) ConnectClient(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ClientEvent, RelayEvent], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Tsunagi_ServiceDesc.Streams[1], Tsunagi_ConnectClient_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Event, Event]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ClientEvent, RelayEvent]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectClientClient = grpc.BidiStreamingClient[Event, Event]
+type Tsunagi_ConnectClientClient = grpc.BidiStreamingClient[ClientEvent, RelayEvent]
 
 // TsunagiServer is the server API for Tsunagi service.
 // All implementations must embed UnimplementedTsunagiServer
@@ -217,11 +216,11 @@ type Tsunagi_ConnectClientClient = grpc.BidiStreamingClient[Event, Event]
 type TsunagiServer interface {
 	// ConnectRelay is for a relay to connect to another relay.
 	// This should be used for relay message passing, since a relay never needs to recieve events.
-	ConnectRelay(grpc.ClientStreamingServer[Event, Empty]) error
+	ConnectRelay(grpc.ClientStreamingServer[RelayEvent, Empty]) error
 	// ConnectClient is for a client to connect with a relay.
 	// This should be used when the connecting client wants to also recieve events from the server.
 	// If they only plan on pushing events, they should use ConnectRelay instead.
-	ConnectClient(grpc.BidiStreamingServer[Event, Event]) error
+	ConnectClient(grpc.BidiStreamingServer[ClientEvent, RelayEvent]) error
 	mustEmbedUnimplementedTsunagiServer()
 }
 
@@ -232,10 +231,10 @@ type TsunagiServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTsunagiServer struct{}
 
-func (UnimplementedTsunagiServer) ConnectRelay(grpc.ClientStreamingServer[Event, Empty]) error {
+func (UnimplementedTsunagiServer) ConnectRelay(grpc.ClientStreamingServer[RelayEvent, Empty]) error {
 	return status.Error(codes.Unimplemented, "method ConnectRelay not implemented")
 }
-func (UnimplementedTsunagiServer) ConnectClient(grpc.BidiStreamingServer[Event, Event]) error {
+func (UnimplementedTsunagiServer) ConnectClient(grpc.BidiStreamingServer[ClientEvent, RelayEvent]) error {
 	return status.Error(codes.Unimplemented, "method ConnectClient not implemented")
 }
 func (UnimplementedTsunagiServer) mustEmbedUnimplementedTsunagiServer() {}
@@ -260,18 +259,18 @@ func RegisterTsunagiServer(s grpc.ServiceRegistrar, srv TsunagiServer) {
 }
 
 func _Tsunagi_ConnectRelay_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TsunagiServer).ConnectRelay(&grpc.GenericServerStream[Event, Empty]{ServerStream: stream})
+	return srv.(TsunagiServer).ConnectRelay(&grpc.GenericServerStream[RelayEvent, Empty]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectRelayServer = grpc.ClientStreamingServer[Event, Empty]
+type Tsunagi_ConnectRelayServer = grpc.ClientStreamingServer[RelayEvent, Empty]
 
 func _Tsunagi_ConnectClient_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TsunagiServer).ConnectClient(&grpc.GenericServerStream[Event, Event]{ServerStream: stream})
+	return srv.(TsunagiServer).ConnectClient(&grpc.GenericServerStream[ClientEvent, RelayEvent]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Tsunagi_ConnectClientServer = grpc.BidiStreamingServer[Event, Event]
+type Tsunagi_ConnectClientServer = grpc.BidiStreamingServer[ClientEvent, RelayEvent]
 
 // Tsunagi_ServiceDesc is the grpc.ServiceDesc for Tsunagi service.
 // It's only intended for direct use with grpc.RegisterService,

@@ -73,7 +73,7 @@ func (c *ClientRelayClient) getStream(addr string) (*ClientRelayStream, error) {
 
 // Send sends the event and blocks until it was delivered or the stream exits.
 // If the event could not be sent due to the client being closed, or the stream exiting, an error is returned.
-func (c *ClientRelayClient) Send(addr string, event *rpc.Event) error {
+func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 
 	stream, err := c.getStream(addr)
 	if err != nil {
@@ -107,23 +107,27 @@ func (c *ClientRelayClient) Send(addr string, event *rpc.Event) error {
 	}
 }
 
-func (c *ClientRelayClient) DeliverMsg(addr string, event *rpc.DeliverRequest) error {
-	return c.Send(addr, &rpc.Event{
-		Body: &rpc.Event_DeliverRequest{
-			DeliverRequest: event,
+func (c *ClientRelayClient) ForwardMsg(addr string, device[]byte, event *rpc.MessagePayload) error {
+	return c.Send(addr, &rpc.ClientEvent{
+		DeviceID: device,
+		RelayAddr: addr,
+		Body: &rpc.ClientEvent_MessagePayload{
+			MessagePayload: event,
 		},
 	})
 }
 
-func (c *ClientRelayClient) ForwardMsg(addr string, event *rpc.ForwardRequest) error {
-	return c.Send(addr, &rpc.Event{
-		Body: &rpc.Event_ForwardRequest{
-			ForwardRequest: event,
+func (c *ClientRelayClient) HandshakeMsg(addr string, device[]byte, event *rpc.NoiseHandshake) error {
+	return c.Send(addr, &rpc.ClientEvent{
+		DeviceID: device,
+		RelayAddr: addr,
+		Body: &rpc.ClientEvent_NoiseHandshake{
+			NoiseHandshake: event,
 		},
 	})
 }
 
-func (c *ClientRelayClient) GetReadHandle(addr string) (<-chan *rpc.Event, <-chan struct{}, error) {
+func (c *ClientRelayClient) GetReadHandle(addr string) (<-chan *rpc.RelayEvent, <-chan struct{}, error) {
 
 	stream, err := c.getStream(addr)
 

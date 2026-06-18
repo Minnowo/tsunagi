@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"tsunagi/src/rpc"
 )
 
 // SendEventRequest is a request to send the given event through an rpc stream.
@@ -11,7 +10,7 @@ import (
 type SendEventRequest struct {
 
 	// event is the rpc event to send. This must not be nil.
-	event *rpc.Event
+	event any
 
 	// resp is a channel to report success/failures.
 	// If nil it is ignored.

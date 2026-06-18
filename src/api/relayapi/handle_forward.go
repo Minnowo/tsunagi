@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ForwardRequest) error {
+func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) error {
 
 	relayAddr, err := url.ParseRequestURI(req.RelayAddr)
 
@@ -33,10 +33,29 @@ func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ForwardReques
 			return fmt.Errorf("missing host in relay address")
 		}
 
-		err := this.relayClient.DeliverMsg(address, &rpc.DeliverRequest{
+		var err error
+
+		switch v := req.Body.(type){
+
+		case *rpc.ClientEvent_MessagePayload:
+
+		err = this.relayClient.Send(address, &rpc.RelayEvent{
 			DeviceID:   req.DeviceID,
-			CipherText: req.CipherText,
+			Body: &rpc.RelayEvent_MessagePayload{
+				MessagePayload: v.MessagePayload ,
+			},
 		})
+
+		case *rpc.ClientEvent_NoiseHandshake:
+
+		err = this.relayClient.Send(address, &rpc.RelayEvent{
+			DeviceID:   req.DeviceID,
+			Body: &rpc.RelayEvent_NoiseHandshake{
+				NoiseHandshake: v.NoiseHandshake,
+			},
+		})
+
+		}
 
 		if err != nil {
 			return err

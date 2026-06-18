@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	ErrInvalidSendType   = fmt.Errorf("invalid send type")
 	ErrStreamClosed   = fmt.Errorf("the stream is closed")
 	ErrClientShutdown = fmt.Errorf("the client is shutdown")
 )
@@ -77,7 +78,7 @@ func (c *RelayRelayClient) getStream(addr string) (*RelayRelayStream, error) {
 
 // Send sends the event and blocks until it was delivered or the stream exits.
 // If the event could not be sent due to the client being closed, or the stream exiting, an error is returned.
-func (c *RelayRelayClient) Send(addr string, event *rpc.Event) error {
+func (c *RelayRelayClient) Send(addr string, event *rpc.RelayEvent) error {
 
 	stream, err := c.getStream(addr)
 	if err != nil {
@@ -111,18 +112,3 @@ func (c *RelayRelayClient) Send(addr string, event *rpc.Event) error {
 	}
 }
 
-func (c *RelayRelayClient) DeliverMsg(addr string, event *rpc.DeliverRequest) error {
-	return c.Send(addr, &rpc.Event{
-		Body: &rpc.Event_DeliverRequest{
-			DeliverRequest: event,
-		},
-	})
-}
-
-func (c *RelayRelayClient) ForwardMsg(addr string, event *rpc.ForwardRequest) error {
-	return c.Send(addr, &rpc.Event{
-		Body: &rpc.Event_ForwardRequest{
-			ForwardRequest: event,
-		},
-	})
-}

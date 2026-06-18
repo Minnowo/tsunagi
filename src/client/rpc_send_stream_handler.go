@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"tsunagi/src/rpc"
 
 	"github.com/rs/zerolog/log"
 )
@@ -18,7 +17,7 @@ type _SendStream interface {
 	IsConnected() bool
 	connect(ctx context.Context) error
 	disconnect()
-	rpcSend(req *rpc.Event) error
+	rpcSend(req any) error
 }
 
 // processSends handles sending events from the given recieve channel into the RPC stream.

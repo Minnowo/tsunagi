@@ -44,6 +44,25 @@ func NewResponderHandshakeState(staticKeypair noise.DHKey) (*noise.HandshakeStat
 	})
 }
 
+func NewSenderAuthHandshakeState(staticKeypair noise.DHKey) (*noise.HandshakeState, error) {
+
+	return noise.NewHandshakeState(noise.Config{
+		CipherSuite:   noiseSuite,
+		Random:        rand.Reader,
+		Pattern:       noise.HandshakeIN,
+		StaticKeypair: staticKeypair,
+	})
+}
+
+func NewResponderAuthHandshakeState() (*noise.HandshakeState, error) {
+
+	return noise.NewHandshakeState(noise.Config{
+		CipherSuite:   noiseSuite,
+		Random:        rand.Reader,
+		Pattern:       noise.HandshakeIN,
+	})
+}
+
 // NoiseCiphers hold the encrypt / decrypt tunnels for a finished noise handshake.
 // This is mainly convenience just to make it easy to determine which tunnel should be used.
 type NoiseCiphers struct {

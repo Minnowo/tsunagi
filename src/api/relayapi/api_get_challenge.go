@@ -2,18 +2,40 @@ package relayapi
 
 import (
 	"context"
-	"crypto/rand"
 	"tsunagi/src/rpc"
+
+	"github.com/minnowo/tsunagi/mod/tcrypto"
 )
 
 func (this *RelayApi) GetChallenge(ctx context.Context, req *rpc.AuthRequest) (*rpc.AuthChallenge, error) {
 
-	var nonce [64]byte
+	state, err := tcrypto.NewResponderAuthHandshakeState()
 
-	rand.Read(nonce[:])
+	if err != nil {
+		return nil, err
+	}
+
+	_, _, _, err = state.ReadMessage(nil, req.HandshakeInitMsg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	msg, enc, _, err := state.WriteMessage(nil, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	proof, err := enc.Encrypt(nil, nil, []byte{1, 2, 3})
+
+	if err != nil {
+		return nil, err
+	}
 
 	ch := &rpc.AuthChallenge{
-		Nonce: nonce[:],
+		HandshakeDoneMsg: msg,
+		AuthChallenge: proof,
 	}
 
 	return ch, nil

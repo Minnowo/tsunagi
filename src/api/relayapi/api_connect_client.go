@@ -1,7 +1,6 @@
 package relayapi
 
 import (
-	"context"
 	"io"
 	"tsunagi/src/rpc"
 
@@ -12,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.Event, rpc.Event]) error {
+func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEvent, rpc.RelayEvent]) error {
 
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
@@ -63,15 +62,17 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.Event, r
 
 		switch v := event.Body.(type) {
 
-		case *rpc.Event_DeliverRequest:
+		case *rpc.ClientEvent_MessagePayload:
 
-			dctx := context.Background()
-			this.DeliverMessage(dctx, v.DeliverRequest)
+			// dctx := context.Background()
+			// this.DeliverMessage(dctx, v.DeliverRequest)
+			log.Info().Bytes("msg", v.MessagePayload.CipherText).Msg("ClientEvent_MessagePayload")
 
-		case *rpc.Event_ForwardRequest:
+		case *rpc.ClientEvent_NoiseHandshake:
 
-			fctx := context.Background()
-			this.ForwardMessage(fctx, v.ForwardRequest)
+			// fctx := context.Background()
+			// this.ForwardMessage(fctx, v.ForwardRequest)
+			log.Info().Bytes("msg", v.NoiseHandshake.State).Msg("ClientEvent_NoiseHandshake")
 		}
 	}
 }

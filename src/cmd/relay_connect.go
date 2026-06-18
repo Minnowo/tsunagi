@@ -16,13 +16,14 @@ import (
 func CmdRelayConnect(ctx context.Context, c *cli.Command) error {
 
 	address := c.Value("addr").(string)
-	device := c.Value("device").(string)
+	// device := c.Value("device").(string)
 
 	var deviceID data.Identifier
+	deviceID.GenNew()
 
-	if err := deviceID.FromString(device); err != nil {
-		return err
-	}
+	// if err := deviceID.FromString(device); err != nil {
+	// 	return err
+	// }
 
 	client := client.NewRelayRelayClient(0)
 
@@ -56,18 +57,15 @@ func CmdRelayConnect(ctx context.Context, c *cli.Command) error {
 			return nil
 
 		case "forward":
-			err = client.ForwardMsg(address, &rpc.ForwardRequest{
+			err = client.Send(address, &rpc.RelayEvent{
 				DeviceID:   deviceID[:],
-				RelayAddr:  args[1],
-				CipherText: []byte(args[2]),
+				Body: &rpc.RelayEvent_MessagePayload{
+					MessagePayload: &rpc.MessagePayload{
+						CipherText: []byte(args[2]),
+					},
+				},
 			})
 
-		case "deliver":
-			err = client.DeliverMsg(address,
-				&rpc.DeliverRequest{
-					DeviceID:   deviceID[:],
-					CipherText: []byte(args[1]),
-				})
 		}
 
 		if err != nil {

@@ -15,7 +15,7 @@ type ClientRelayStream struct {
 	// mu locks both the stream and didStart to ensure the processing of this stream only happens once
 	mu sync.Mutex
 
-	stream grpc.BidiStreamingClient[rpc.Event, rpc.Event]
+	stream grpc.BidiStreamingClient[rpc.ClientEvent, rpc.RelayEvent]
 
 	// didStart is true if the goroutine loop was started
 	didStart bool
@@ -29,7 +29,7 @@ type ClientRelayStream struct {
 
 	// read events recieved on rpc are sent through this channel
 	// This is never to be closed.
-	read chan *rpc.Event
+	read chan *rpc.RelayEvent
 
 	// this channel SHOULD BE closed to signal exit (shutdown stream, stop goroutines, etc)
 	exit chan struct{}
@@ -41,7 +41,7 @@ func NewClientRelayStream(conn *TsunagiConn, sendChanSize int) *ClientRelayStrea
 		didStart: false,
 		didExit:  false,
 		send:     make(chan SendEventRequest, sendChanSize),
-		read:     make(chan *rpc.Event),
+		read:     make(chan *rpc.RelayEvent),
 		exit:     make(chan struct{}),
 	}
 }
@@ -50,7 +50,7 @@ func (r *ClientRelayStream) SendChan() chan<- SendEventRequest {
 	return r.send
 }
 
-func (r *ClientRelayStream) ReadChan() <-chan *rpc.Event {
+func (r *ClientRelayStream) ReadChan() <-chan *rpc.RelayEvent {
 	return r.read
 }
 
@@ -104,8 +104,15 @@ func (r *ClientRelayStream) IsConnected() bool {
 	return r.stream != nil
 }
 
-func (r *ClientRelayStream) rpcSend(req *rpc.Event) error {
-	return r.stream.Send(req)
+func (r *ClientRelayStream) rpcSend(req any) error {
+
+	reqq, ok := req.(*rpc.ClientEvent)
+
+	if !ok {
+		return ErrInvalidSendType
+	}
+
+	return r.stream.Send(reqq)
 }
 
 func (r *ClientRelayStream) disconnect() {
