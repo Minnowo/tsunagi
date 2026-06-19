@@ -13,11 +13,23 @@ import (
 
 func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEvent, rpc.RelayEvent]) error {
 
+	log.Debug().Msg("client trying to connect")
+
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
-	if !ok || !this.ValidAuth(md) {
+	if !ok {
+	log.Debug().Msg("client failed to connect - no auth context")
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
+
+	pubkey, err := this.GetAuthIdentity(md) 
+
+	if err != nil {
+	log.Debug().Err(err).Msg("client failed to connect - bad token")
+		return status.Error(codes.Unauthenticated, "missing metadata")
+	}
+
+	log.Debug().Hex("deviceID", pubkey).Msg("client device connected")
 
 	// go func() {
 

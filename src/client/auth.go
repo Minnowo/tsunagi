@@ -2,10 +2,11 @@ package client
 
 import (
 	"context"
-	"encoding/hex"
+	"encoding/base64"
 	"tsunagi/src/rpc"
 
 	"github.com/minnowo/tsunagi/mod/tcrypto"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -17,21 +18,21 @@ func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, er
 		return nil, err
 	}
 
-	state, err := tcrypto.NewSenderAuthHandshakeState(keypair)
+	state, err := tcrypto.NewSenderHandshakeIN(keypair)
 
 	if err != nil {
 		return nil, err
 	}
 
-	msg, _ ,_, err := state.WriteMessage(nil, nil)
+	msg, err := tcrypto.SenderHandshakeINStep1(state)
 
 	if err != nil {
 		return nil, err
 	}
 
 	challenge, err := conn.Auth.GetChallenge(ctx, &rpc.AuthRequest{
-		DeviceID: keypair.Public,
-		PubKey: keypair.Public,
+		DeviceID:         keypair.Public,
+		PubKey:           keypair.Public,
 		HandshakeInitMsg: msg,
 	})
 
@@ -39,17 +40,21 @@ func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, er
 		return nil, err
 	}
 
-	_, dec, _, err := state.ReadMessage(nil, challenge.HandshakeDoneMsg)
+	log.Debug().Hex("cipher", challenge.AuthChallenge).Msg("got auth challenge from relay")
+
+	cipher, err := tcrypto.SenderHandshakeINStep2(challenge.HandshakeDoneMsg, state)
 
 	if err != nil {
 		return nil, err
 	}
 
-	proof, err := dec.Decrypt(nil, nil, challenge.AuthChallenge)
+	proof, err := cipher.Dec.Decrypt(nil, nil, challenge.AuthChallenge)
 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Msg("challenge decrypted")
 
 	authToken, err := conn.Auth.ProveChallenge(ctx, &rpc.AuthProof{
 		Signature: proof,
@@ -59,9 +64,11 @@ func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, er
 		return nil, err
 	}
 
+	log.Debug().Hex("token", authToken.Token).Msg("got auth token")
+
 	authCtx := metadata.NewOutgoingContext(
 		context.Background(),
-		metadata.Pairs("authorization", "Bearer "+hex.EncodeToString(authToken.GetToken())),
+		metadata.Pairs("authorization", base64.StdEncoding.EncodeToString(authToken.Token)),
 	)
 
 	return authCtx, nil

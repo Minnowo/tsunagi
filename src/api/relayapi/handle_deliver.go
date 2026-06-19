@@ -16,27 +16,27 @@ func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) e
 		return err
 	}
 
-	switch v := req.Body.(type){
+	switch v := req.Body.(type) {
 
 	case *rpc.RelayEvent_MessagePayload:
 
-	err := this.inbox.PutMsg(deviceID, v.MessagePayload.CipherText)
+		err := this.inbox.PutMsg(deviceID, v.MessagePayload.CipherText)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	log.Info().
-		Hex("device", req.DeviceID[:]).
-		Bytes("mgs", v.MessagePayload.CipherText).
-		Msg("message was delivered to inbox")
+		log.Info().
+			Hex("device", req.DeviceID[:]).
+			Bytes("mgs", v.MessagePayload.CipherText).
+			Msg("message was delivered to inbox")
 
 	case *rpc.RelayEvent_NoiseHandshake:
 
-	log.Info().
-		Hex("device", req.DeviceID[:]).
-		Bytes("mgs", v.NoiseHandshake.State).
-		Msg("got noise handshake")
+		log.Info().
+			Hex("device", req.DeviceID[:]).
+			Bytes("mgs", v.NoiseHandshake.State).
+			Msg("got noise handshake")
 
 	}
 

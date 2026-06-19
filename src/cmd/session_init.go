@@ -6,10 +6,12 @@ import (
 	"fmt"
 
 	"github.com/flynn/noise"
+	"github.com/minnowo/tsunagi/mod/tcrypto"
 	"github.com/urfave/cli/v3"
 )
 
 func handshakeXX() error {
+
 	suite := noise.NewCipherSuite(noise.DH25519, noise.CipherChaChaPoly, noise.HashSHA256)
 
 	staticI, _ := suite.GenerateKeypair(rand.Reader)
@@ -170,7 +172,66 @@ func handshakeIK() error {
 	return nil
 }
 
-func CmdSessionInit(ctx context.Context, c *cli.Command) error {
+func handshakeIN() error {
+
+	static, err := tcrypto.GenerateNoiseKeypair()
+
+	if err != nil {
+		return err
+	}
+
+	senderState, err := tcrypto.NewSenderHandshakeIN(static)
+
+	if err != nil {
+		return err
+	}
+
+	responderState, err := tcrypto.NewResponderHandshakeIN()
+
+	if err != nil {
+		return err
+	}
+
+	// IN:
+	//     -> e, s
+	//     <- e, ee, se
+
+	msg, err := tcrypto.SenderHandshakeINStep1(senderState)
+
+	if err != nil {
+		return err
+	}
+
+	msg, responder, err := tcrypto.ResponderHandshakeINStep1(msg, responderState)
+
+	if err != nil {
+		return err
+	}
+
+	sender, err := tcrypto.SenderHandshakeINStep2(msg, senderState)
+
+	if err != nil {
+		return err
+	}
+
+	cipher, err := sender.Enc.Encrypt(nil, nil, []byte{1, 2, 3})
+
+	if err != nil {
+		return err
+	}
+
+	plain, err := responder.Dec.Decrypt(nil, nil, cipher)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(plain)
 
 	return nil
+}
+
+func CmdSessionInit(ctx context.Context, c *cli.Command) error {
+
+	return handshakeIN()
 }

@@ -2,41 +2,45 @@ package relayapi
 
 import (
 	"context"
+	"time"
 	"tsunagi/src/rpc"
 
 	"github.com/minnowo/tsunagi/mod/tcrypto"
+	"github.com/rs/zerolog/log"
 )
 
 func (this *RelayApi) GetChallenge(ctx context.Context, req *rpc.AuthRequest) (*rpc.AuthChallenge, error) {
 
-	state, err := tcrypto.NewResponderAuthHandshakeState()
+	state, err := tcrypto.NewResponderHandshakeIN()
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, _, _, err = state.ReadMessage(nil, req.HandshakeInitMsg)
+	handshakeDoneMsg, cipher, err := tcrypto.ResponderHandshakeINStep1(req.HandshakeInitMsg, state)
 
 	if err != nil {
 		return nil, err
 	}
 
-	msg, enc, _, err := state.WriteMessage(nil, nil)
+	token, err := tcrypto.BuildAuthToken(req.DeviceID, time.Hour, this.macKey)
 
 	if err != nil {
 		return nil, err
 	}
 
-	proof, err := enc.Encrypt(nil, nil, []byte{1, 2, 3})
+	proof, err := cipher.Enc.Encrypt(nil, nil, token)
 
 	if err != nil {
 		return nil, err
 	}
 
 	ch := &rpc.AuthChallenge{
-		HandshakeDoneMsg: msg,
-		AuthChallenge: proof,
+		HandshakeDoneMsg: handshakeDoneMsg,
+		AuthChallenge:    proof,
 	}
+
+	log.Info().Msg("send AuthChallenge")
 
 	return ch, nil
 }

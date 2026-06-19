@@ -16,13 +16,9 @@ import (
 func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 
 	address := c.Value("addr").(string)
-	device := c.Value("device").(string)
 
 	var deviceID data.Identifier
-
-	if err := deviceID.FromString(device); err != nil {
-		return err
-	}
+	deviceID.GenNew()
 
 	client := client.NewClientRelayClient(0)
 

@@ -58,7 +58,7 @@ func CmdRelayConnect(ctx context.Context, c *cli.Command) error {
 
 		case "forward":
 			err = client.Send(address, &rpc.RelayEvent{
-				DeviceID:   deviceID[:],
+				DeviceID: deviceID[:],
 				Body: &rpc.RelayEvent_MessagePayload{
 					MessagePayload: &rpc.MessagePayload{
 						CipherText: []byte(args[2]),

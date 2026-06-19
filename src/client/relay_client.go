@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	ErrInvalidSendType   = fmt.Errorf("invalid send type")
-	ErrStreamClosed   = fmt.Errorf("the stream is closed")
-	ErrClientShutdown = fmt.Errorf("the client is shutdown")
+	ErrInvalidSendType = fmt.Errorf("invalid send type")
+	ErrStreamClosed    = fmt.Errorf("the stream is closed")
+	ErrClientShutdown  = fmt.Errorf("the client is shutdown")
 )
 
 type _ConnRelayStream struct {
@@ -111,4 +111,3 @@ func (c *RelayRelayClient) Send(addr string, event *rpc.RelayEvent) error {
 		return err
 	}
 }
-

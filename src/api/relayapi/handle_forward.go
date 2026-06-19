@@ -35,25 +35,25 @@ func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) 
 
 		var err error
 
-		switch v := req.Body.(type){
+		switch v := req.Body.(type) {
 
 		case *rpc.ClientEvent_MessagePayload:
 
-		err = this.relayClient.Send(address, &rpc.RelayEvent{
-			DeviceID:   req.DeviceID,
-			Body: &rpc.RelayEvent_MessagePayload{
-				MessagePayload: v.MessagePayload ,
-			},
-		})
+			err = this.relayClient.Send(address, &rpc.RelayEvent{
+				DeviceID: req.DeviceID,
+				Body: &rpc.RelayEvent_MessagePayload{
+					MessagePayload: v.MessagePayload,
+				},
+			})
 
 		case *rpc.ClientEvent_NoiseHandshake:
 
-		err = this.relayClient.Send(address, &rpc.RelayEvent{
-			DeviceID:   req.DeviceID,
-			Body: &rpc.RelayEvent_NoiseHandshake{
-				NoiseHandshake: v.NoiseHandshake,
-			},
-		})
+			err = this.relayClient.Send(address, &rpc.RelayEvent{
+				DeviceID: req.DeviceID,
+				Body: &rpc.RelayEvent_NoiseHandshake{
+					NoiseHandshake: v.NoiseHandshake,
+				},
+			})
 
 		}
 

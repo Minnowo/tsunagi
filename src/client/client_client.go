@@ -76,6 +76,7 @@ func (c *ClientRelayClient) getStream(addr string) (*ClientRelayStream, error) {
 func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 
 	stream, err := c.getStream(addr)
+
 	if err != nil {
 		return err
 	}
@@ -107,9 +108,9 @@ func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 	}
 }
 
-func (c *ClientRelayClient) ForwardMsg(addr string, device[]byte, event *rpc.MessagePayload) error {
+func (c *ClientRelayClient) ForwardMsg(addr string, device []byte, event *rpc.MessagePayload) error {
 	return c.Send(addr, &rpc.ClientEvent{
-		DeviceID: device,
+		DeviceID:  device,
 		RelayAddr: addr,
 		Body: &rpc.ClientEvent_MessagePayload{
 			MessagePayload: event,
@@ -117,9 +118,9 @@ func (c *ClientRelayClient) ForwardMsg(addr string, device[]byte, event *rpc.Mes
 	})
 }
 
-func (c *ClientRelayClient) HandshakeMsg(addr string, device[]byte, event *rpc.NoiseHandshake) error {
+func (c *ClientRelayClient) HandshakeMsg(addr string, device []byte, event *rpc.NoiseHandshake) error {
 	return c.Send(addr, &rpc.ClientEvent{
-		DeviceID: device,
+		DeviceID:  device,
 		RelayAddr: addr,
 		Body: &rpc.ClientEvent_NoiseHandshake{
 			NoiseHandshake: event,
