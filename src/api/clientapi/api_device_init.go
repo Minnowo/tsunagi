@@ -42,7 +42,6 @@ func (this *ClientApi) apiDeviceInit(w http.ResponseWriter, r *http.Request) {
 
 	var dev data.Device
 
-	dev.ID.GenNew()
 	dev.UserID = req.UserID
 	dev.PubKey = keypair.Public
 	dev.PriKey = keypair.Private

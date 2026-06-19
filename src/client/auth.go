@@ -31,7 +31,6 @@ func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, er
 	}
 
 	challenge, err := conn.Auth.GetChallenge(ctx, &rpc.AuthRequest{
-		DeviceID:         keypair.Public,
 		PubKey:           keypair.Public,
 		HandshakeInitMsg: msg,
 	})

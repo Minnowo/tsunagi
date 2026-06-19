@@ -37,7 +37,6 @@ func (this *ClientApi) apiIdentityInit(w http.ResponseWriter, r *http.Request) {
 
 	var acc data.User
 
-	acc.ID.GenNew()
 	acc.PubKey = keypair.Public
 	acc.PriKey = keypair.Private
 

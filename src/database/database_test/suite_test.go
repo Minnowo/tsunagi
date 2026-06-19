@@ -5,6 +5,7 @@ package database_test
 
 import (
 	"context"
+	"crypto/rand"
 	"testing"
 	"tsunagi/src/data"
 	"tsunagi/src/database"
@@ -30,7 +31,7 @@ func RunSuite(t *testing.T, newDB NewDB) {
 func newIdentifier(t *testing.T) data.Identifier {
 	t.Helper()
 	var id data.Identifier
-	id.GenNew()
+	rand.Read(id[:])
 	return id
 }
 

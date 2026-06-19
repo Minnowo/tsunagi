@@ -1,20 +1,21 @@
 package data
 
 import (
-	"crypto/rand"
 	"database/sql/driver"
 	"encoding/base32"
 	"encoding/json"
+	"errors"
 	"fmt"
+
+	"github.com/minnowo/tsunagi/mod/tcrypto"
 )
 
+var (
+	ErrInvalidIdentifier = errors.New("invalid identifier")
+)
 var strEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)
 
-type Identifier [32]byte
-
-func (id *Identifier) GenNew() {
-	rand.Read(id[:])
-}
+type Identifier [tcrypto.NoiseKeySize]byte
 
 func (id Identifier) String() string {
 	return strEncoding.EncodeToString(id[:])
@@ -23,7 +24,7 @@ func (id Identifier) String() string {
 func (id *Identifier) FromString(s string) error {
 
 	if len(id) == 0 {
-		return fmt.Errorf("nil Identifier receiver")
+		panic("Identifier.FromString: nil Identifier receiver")
 	}
 
 	decoded, err := strEncoding.DecodeString(s)
@@ -33,7 +34,7 @@ func (id *Identifier) FromString(s string) error {
 	}
 
 	if len(decoded) != len(id) {
-		return fmt.Errorf("invalid identifier length: must be 32 bytes")
+		return ErrInvalidIdentifier
 	}
 
 	copy(id[:], decoded)
@@ -43,11 +44,11 @@ func (id *Identifier) FromString(s string) error {
 func (id *Identifier) FromBytes(buf []byte) error {
 
 	if len(id) == 0 {
-		return fmt.Errorf("nil Identifier receiver")
+		panic("Identifier.FromBytes: nil Identifier receiver")
 	}
 
 	if len(buf) != len(id) {
-		return fmt.Errorf("invalid identifier length: must be 32 bytes")
+		return ErrInvalidIdentifier
 	}
 
 	copy(id[:], buf)
@@ -60,19 +61,19 @@ func (id Identifier) Value() (driver.Value, error) {
 
 func (id *Identifier) Scan(value any) error {
 	if id == nil {
-		return fmt.Errorf("nil Identifier receiver")
+		panic("Identifier.Scan: nil Identifier receiver")
 	}
 
 	switch v := value.(type) {
 	case []byte:
 		if len(v) != len(id) {
-			return fmt.Errorf("invalid identifier length: expected 32 bytes, got %d", len(v))
+			return ErrInvalidIdentifier
 		}
 		copy(id[:], v)
 		return nil
 
 	default:
-		return fmt.Errorf("unsupported type for Identifier: %T", value)
+		return fmt.Errorf("Identifier.Scan: unsupported type for Identifier: %T", value)
 	}
 }
 

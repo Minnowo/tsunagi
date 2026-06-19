@@ -26,9 +26,8 @@ const (
 // They will provide their identity and then wait to verify it.
 type AuthRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID         []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"`                 // 32 bytes
-	PubKey           []byte                 `protobuf:"bytes,2,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                     // public key
-	HandshakeInitMsg []byte                 `protobuf:"bytes,3,opt,name=HandshakeInitMsg,proto3" json:"HandshakeInitMsg,omitempty"` // noise IN step 1 handshake msg
+	PubKey           []byte                 `protobuf:"bytes,1,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                     // public key
+	HandshakeInitMsg []byte                 `protobuf:"bytes,2,opt,name=HandshakeInitMsg,proto3" json:"HandshakeInitMsg,omitempty"` // noise IN step 1 handshake msg
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -61,13 +60,6 @@ func (x *AuthRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AuthRequest.ProtoReflect.Descriptor instead.
 func (*AuthRequest) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *AuthRequest) GetDeviceID() []byte {
-	if x != nil {
-		return x.DeviceID
-	}
-	return nil
 }
 
 func (x *AuthRequest) GetPubKey() []byte {
@@ -267,7 +259,7 @@ func (*Empty) Descriptor() ([]byte, []int) {
 
 type ClientEvent struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID  []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
+	PubKey    []byte                 `protobuf:"bytes,1,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
 	RelayAddr string                 `protobuf:"bytes,2,opt,name=RelayAddr,proto3" json:"RelayAddr,omitempty"`
 	// Types that are valid to be assigned to Body:
 	//
@@ -308,9 +300,9 @@ func (*ClientEvent) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ClientEvent) GetDeviceID() []byte {
+func (x *ClientEvent) GetPubKey() []byte {
 	if x != nil {
-		return x.DeviceID
+		return x.PubKey
 	}
 	return nil
 }
@@ -364,8 +356,8 @@ func (*ClientEvent_NoiseHandshake) isClientEvent_Body() {}
 func (*ClientEvent_MessagePayload) isClientEvent_Body() {}
 
 type RelayEvent struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	DeviceID []byte                 `protobuf:"bytes,1,opt,name=DeviceID,proto3" json:"DeviceID,omitempty"` // 32 bytes
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	PubKey []byte                 `protobuf:"bytes,1,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
 	// Types that are valid to be assigned to Body:
 	//
 	//	*RelayEvent_NoiseHandshake
@@ -405,9 +397,9 @@ func (*RelayEvent) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *RelayEvent) GetDeviceID() []byte {
+func (x *RelayEvent) GetPubKey() []byte {
 	if x != nil {
-		return x.DeviceID
+		return x.PubKey
 	}
 	return nil
 }
@@ -547,11 +539,10 @@ var File_src_rpc_tsunagi_proto protoreflect.FileDescriptor
 
 const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\n" +
-	"\x15src/rpc/tsunagi.proto\x12\x03rpc\"m\n" +
-	"\vAuthRequest\x12\x1a\n" +
-	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x16\n" +
-	"\x06PubKey\x18\x02 \x01(\fR\x06PubKey\x12*\n" +
-	"\x10HandshakeInitMsg\x18\x03 \x01(\fR\x10HandshakeInitMsg\"a\n" +
+	"\x15src/rpc/tsunagi.proto\x12\x03rpc\"Q\n" +
+	"\vAuthRequest\x12\x16\n" +
+	"\x06PubKey\x18\x01 \x01(\fR\x06PubKey\x12*\n" +
+	"\x10HandshakeInitMsg\x18\x02 \x01(\fR\x10HandshakeInitMsg\"a\n" +
 	"\rAuthChallenge\x12*\n" +
 	"\x10HandshakeDoneMsg\x18\x01 \x01(\fR\x10HandshakeDoneMsg\x12$\n" +
 	"\rAuthChallenge\x18\x02 \x01(\fR\rAuthChallenge\")\n" +
@@ -559,16 +550,16 @@ const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\tSignature\x18\x01 \x01(\fR\tSignature\"!\n" +
 	"\tAuthToken\x12\x14\n" +
 	"\x05Token\x18\x01 \x01(\fR\x05Token\"\a\n" +
-	"\x05Empty\"\xcd\x01\n" +
-	"\vClientEvent\x12\x1a\n" +
-	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12\x1c\n" +
+	"\x05Empty\"\xc9\x01\n" +
+	"\vClientEvent\x12\x16\n" +
+	"\x06PubKey\x18\x01 \x01(\fR\x06PubKey\x12\x1c\n" +
 	"\tRelayAddr\x18\x02 \x01(\tR\tRelayAddr\x12=\n" +
 	"\x0eNoiseHandshake\x18\x03 \x01(\v2\x13.rpc.NoiseHandshakeH\x00R\x0eNoiseHandshake\x12=\n" +
 	"\x0eMessagePayload\x18\x04 \x01(\v2\x13.rpc.MessagePayloadH\x00R\x0eMessagePayloadB\x06\n" +
-	"\x04Body\"\xae\x01\n" +
+	"\x04Body\"\xaa\x01\n" +
 	"\n" +
-	"RelayEvent\x12\x1a\n" +
-	"\bDeviceID\x18\x01 \x01(\fR\bDeviceID\x12=\n" +
+	"RelayEvent\x12\x16\n" +
+	"\x06PubKey\x18\x01 \x01(\fR\x06PubKey\x12=\n" +
 	"\x0eNoiseHandshake\x18\x02 \x01(\v2\x13.rpc.NoiseHandshakeH\x00R\x0eNoiseHandshake\x12=\n" +
 	"\x0eMessagePayload\x18\x03 \x01(\v2\x13.rpc.MessagePayloadH\x00R\x0eMessagePayloadB\x06\n" +
 	"\x04Body\"&\n" +

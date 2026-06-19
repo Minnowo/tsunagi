@@ -17,10 +17,6 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 
 	address := c.Value("addr").(string)
 
-	var deviceID data.Identifier
-	deviceID.GenNew()
-	log.Info().Str("id", deviceID.String()).Msg("tmp device")
-
 	client := client.NewClientRelayClient(0)
 
 	log.Info().Msg("connected - type messages, 'exit' to quit")
@@ -78,7 +74,7 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 				break
 			}
 			err = client.Send(address, &rpc.ClientEvent{
-				DeviceID:  other[:],
+				PubKey:    other[:],
 				RelayAddr: args[2],
 				Body: &rpc.ClientEvent_MessagePayload{
 					MessagePayload: &rpc.MessagePayload{

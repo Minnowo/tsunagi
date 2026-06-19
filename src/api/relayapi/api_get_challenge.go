@@ -23,7 +23,7 @@ func (this *RelayApi) GetChallenge(ctx context.Context, req *rpc.AuthRequest) (*
 		return nil, err
 	}
 
-	token, err := tcrypto.BuildAuthToken(req.DeviceID, time.Hour, this.MacKey[:])
+	token, err := tcrypto.BuildAuthToken(req.PubKey, time.Hour, this.MacKey[:])
 
 	if err != nil {
 		return nil, err

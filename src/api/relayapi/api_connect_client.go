@@ -29,14 +29,14 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 
 	if err != nil {
 		log.Debug().Err(err).Msg("client failed to connect - bad token")
-		return status.Error(codes.Unauthenticated, "missing metadata")
+		return status.Error(codes.Unauthenticated, "bad token")
 	}
 
 	var id data.Identifier
 
 	if err := id.FromBytes(pubkey); err != nil {
 		log.Debug().Err(err).Msg("client failed to connect - pubkey could not fit inside identifier")
-		return status.Error(codes.Unauthenticated, "missing metadata")
+		return status.Error(codes.Unauthenticated, "bad token")
 	}
 
 	log.Debug().Str("deviceID", id.String()).Msg("client device connected")
@@ -65,7 +65,7 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 					return
 				}
 
-				log.Debug().Hex("id", pubkey).Msg("sending message to client")
+				log.Debug().Msg("sending message to client")
 
 				err := stream.Send(msg)
 

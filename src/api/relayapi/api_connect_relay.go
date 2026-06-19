@@ -56,7 +56,7 @@ func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) e
 
 	var deviceID data.Identifier
 
-	if err := deviceID.FromBytes(req.DeviceID); err != nil {
+	if err := deviceID.FromBytes(req.PubKey); err != nil {
 		return err
 	}
 

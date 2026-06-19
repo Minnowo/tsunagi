@@ -12,9 +12,8 @@ service Auth {
 // AuthRequest is sent by a client who wants to authenticate.
 // They will provide their identity and then wait to verify it.
 message AuthRequest {
-  bytes  DeviceID             = 1; // 32 bytes
-  bytes  PubKey               = 2; // public key
-  bytes  HandshakeInitMsg     = 3; // noise IN step 1 handshake msg
+  bytes  PubKey               = 1; // public key
+  bytes  HandshakeInitMsg     = 2; // noise IN step 1 handshake msg
 }
 
 // AuthChallenge is sent by the server to a connecting client.
@@ -53,7 +52,7 @@ service Tsunagi {
 message Empty {}
 
 message ClientEvent {
-  bytes  DeviceID   = 1; // 32 bytes
+  bytes  PubKey     = 1;
   string RelayAddr  = 2;
   oneof Body {
     NoiseHandshake  NoiseHandshake = 3;
@@ -62,7 +61,7 @@ message ClientEvent {
 }
 
 message RelayEvent {
-  bytes  DeviceID   = 1; // 32 bytes
+  bytes PubKey   = 1;
   oneof Body {
     NoiseHandshake  NoiseHandshake = 2;
     MessagePayload  MessagePayload = 3;
