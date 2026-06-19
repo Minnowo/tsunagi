@@ -108,25 +108,25 @@ func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 	}
 }
 
-func (c *ClientRelayClient) ForwardMsg(addr string, device []byte, event *rpc.MessagePayload) error {
-	return c.Send(addr, &rpc.ClientEvent{
-		DeviceID:  device,
-		RelayAddr: addr,
-		Body: &rpc.ClientEvent_MessagePayload{
-			MessagePayload: event,
-		},
-	})
-}
+// func (c *ClientRelayClient) ForwardMsg(addr string, device []byte, event *rpc.MessagePayload) error {
+// 	return c.Send(addr, &rpc.ClientEvent{
+// 		DeviceID:  device,
+// 		RelayAddr: addr,
+// 		Body: &rpc.ClientEvent_MessagePayload{
+// 			MessagePayload: event,
+// 		},
+// 	})
+// }
 
-func (c *ClientRelayClient) HandshakeMsg(addr string, device []byte, event *rpc.NoiseHandshake) error {
-	return c.Send(addr, &rpc.ClientEvent{
-		DeviceID:  device,
-		RelayAddr: addr,
-		Body: &rpc.ClientEvent_NoiseHandshake{
-			NoiseHandshake: event,
-		},
-	})
-}
+// func (c *ClientRelayClient) HandshakeMsg(addr string, device []byte, event *rpc.NoiseHandshake) error {
+// 	return c.Send(addr, &rpc.ClientEvent{
+// 		DeviceID:  device,
+// 		RelayAddr: addr,
+// 		Body: &rpc.ClientEvent_NoiseHandshake{
+// 			NoiseHandshake: event,
+// 		},
+// 	})
+// }
 
 func (c *ClientRelayClient) GetReadHandle(addr string) (<-chan *rpc.RelayEvent, <-chan struct{}, error) {
 

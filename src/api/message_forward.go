@@ -1,4 +1,4 @@
-package relayapi
+package api
 
 import (
 	"context"
@@ -6,15 +6,12 @@ import (
 	"net/url"
 	"strings"
 	"tsunagi/src/rpc"
-
-	"github.com/rs/zerolog/log"
 )
 
-func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) error {
+func (this *TsunagiBase) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) error {
 
 	relayAddr, err := url.ParseRequestURI(req.RelayAddr)
 
-	log.Info().Interface("payload", req).Msg("got forward")
 	if err != nil {
 		return err
 	}
@@ -33,13 +30,11 @@ func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) 
 			return fmt.Errorf("missing host in relay address")
 		}
 
-		var err error
-
 		switch v := req.Body.(type) {
 
 		case *rpc.ClientEvent_MessagePayload:
 
-			err = this.relayClient.Send(address, &rpc.RelayEvent{
+			return this.RelayClient.Send(address, &rpc.RelayEvent{
 				DeviceID: req.DeviceID,
 				Body: &rpc.RelayEvent_MessagePayload{
 					MessagePayload: v.MessagePayload,
@@ -48,17 +43,13 @@ func (this *RelayApi) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) 
 
 		case *rpc.ClientEvent_NoiseHandshake:
 
-			err = this.relayClient.Send(address, &rpc.RelayEvent{
+			return this.RelayClient.Send(address, &rpc.RelayEvent{
 				DeviceID: req.DeviceID,
 				Body: &rpc.RelayEvent_NoiseHandshake{
 					NoiseHandshake: v.NoiseHandshake,
 				},
 			})
 
-		}
-
-		if err != nil {
-			return err
 		}
 	}
 

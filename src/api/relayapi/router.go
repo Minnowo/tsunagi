@@ -1,10 +1,8 @@
 package relayapi
 
 import (
-	"crypto/rand"
 	"encoding/base64"
-	"tsunagi/src/client"
-	"tsunagi/src/data"
+	"tsunagi/src/api"
 	"tsunagi/src/rpc"
 
 	"github.com/minnowo/tsunagi/mod/tcrypto"
@@ -15,9 +13,7 @@ import (
 type RelayApi struct {
 	rpc.UnimplementedTsunagiServer
 	rpc.UnimplementedAuthServer
-	inbox       Inbox
-	relayClient *client.RelayRelayClient
-	macKey      []byte
+	api.TsunagiBase
 }
 
 func (this *RelayApi) GetAuthIdentity(md metadata.MD) ([]byte, error) {
@@ -30,20 +26,11 @@ func (this *RelayApi) GetAuthIdentity(md metadata.MD) ([]byte, error) {
 
 	token, err := base64.StdEncoding.DecodeString(auth[0])
 
-	if err != nil { return nil, err }
-
-	return tcrypto.ParseAuthToken(token, this.macKey)
-}
-
-func (this *RelayApi) Init() {
-
-	this.inbox = Inbox{
-		inbox: map[data.Identifier]Box{},
+	if err != nil {
+		return nil, err
 	}
 
-	this.relayClient = client.NewRelayRelayClient(50)
-	this.macKey = make([]byte, tcrypto.MacKeySize)
-	rand.Read(this.macKey)
+	return tcrypto.ParseAuthToken(token, this.MacKey[:])
 }
 
 func (this *RelayApi) Register(r *grpc.Server) {

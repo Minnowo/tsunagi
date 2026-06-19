@@ -9,7 +9,7 @@ import (
 
 func (this *RelayApi) ProveChallenge(ctx context.Context, proof *rpc.AuthProof) (*rpc.AuthToken, error) {
 
-	_, err := tcrypto.ParseAuthToken(proof.Signature, this.macKey)
+	_, err := tcrypto.ParseAuthToken(proof.Signature, this.MacKey[:])
 
 	if err != nil {
 		return nil, err

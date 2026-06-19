@@ -1,7 +1,10 @@
 package relayapi
 
 import (
+	"context"
 	"io"
+	"tsunagi/src/api"
+	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -18,45 +21,62 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
 	if !ok {
-	log.Debug().Msg("client failed to connect - no auth context")
+		log.Debug().Msg("client failed to connect - no auth context")
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
-	pubkey, err := this.GetAuthIdentity(md) 
+	pubkey, err := this.GetAuthIdentity(md)
 
 	if err != nil {
-	log.Debug().Err(err).Msg("client failed to connect - bad token")
+		log.Debug().Err(err).Msg("client failed to connect - bad token")
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
-	log.Debug().Hex("deviceID", pubkey).Msg("client device connected")
+	var id data.Identifier
 
-	// go func() {
+	if err := id.FromBytes(pubkey); err != nil {
+		log.Debug().Err(err).Msg("client failed to connect - pubkey could not fit inside identifier")
+		return status.Error(codes.Unauthenticated, "missing metadata")
+	}
 
-	// 	// this is temporary to test the client.Client reads
-	// 	var deviceId [32]byte
-	// 	ticker := time.NewTicker(time.Second * 5)
-	// 	for {
-	// 		select {
-	// 		case <-ticker.C:
-	// 			log.Info().Msg("tick")
-	// 			rand.Read(deviceId[:])
+	log.Debug().Str("deviceID", id.String()).Msg("client device connected")
 
-	// 			err := stream.Send(
-	// 				&rpc.Event{
-	// 					Body: &rpc.Event_DeliverRequest{
-	// 						DeliverRequest: &rpc.DeliverRequest{
-	// 							DeviceID: deviceId[:],
-	// 						},
-	// 					},
-	// 				})
-	// 			if err != nil {
-	// 				log.Info().Msg("client disconnected")
-	// 				return
-	// 			}
-	// 		}
-	// 	}
-	// }()
+	ctx, cancel := context.WithCancel(stream.Context())
+
+	conn := api.ClientConn{
+		SendCh: make(chan *rpc.RelayEvent),
+		Ctx:    ctx,
+	}
+
+	if !this.ClientConns.AddConn(id, &conn) {
+		return api.ErrClientConnExists
+	}
+	defer this.ClientConns.RemoveConn(id)
+
+	go func() {
+		defer cancel()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case msg, ok := <-conn.SendCh:
+				if !ok {
+					return
+				}
+
+				log.Debug().Hex("id", pubkey).Msg("sending message to client")
+
+				err := stream.Send(msg)
+
+				if err != nil {
+					log.Debug().Err(err).Msg("send failed, closing stream")
+					cancel()
+					return
+				}
+			}
+		}
+	}()
 
 	for {
 		event, err := stream.Recv()
@@ -72,19 +92,10 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 			return err
 		}
 
-		switch v := event.Body.(type) {
+		err = this.ForwardMessage(stream.Context(), event)
 
-		case *rpc.ClientEvent_MessagePayload:
-
-			// dctx := context.Background()
-			// this.DeliverMessage(dctx, v.DeliverRequest)
-			log.Info().Bytes("msg", v.MessagePayload.CipherText).Msg("ClientEvent_MessagePayload")
-
-		case *rpc.ClientEvent_NoiseHandshake:
-
-			// fctx := context.Background()
-			// this.ForwardMessage(fctx, v.ForwardRequest)
-			log.Info().Bytes("msg", v.NoiseHandshake.State).Msg("ClientEvent_NoiseHandshake")
+		if err != nil {
+			log.Error().Err(err).Msg("error forwarding message")
 		}
 	}
 }

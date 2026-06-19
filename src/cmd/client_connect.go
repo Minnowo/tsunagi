@@ -19,6 +19,7 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 
 	var deviceID data.Identifier
 	deviceID.GenNew()
+	log.Info().Str("id", deviceID.String()).Msg("tmp device")
 
 	client := client.NewClientRelayClient(0)
 
@@ -70,8 +71,20 @@ func CmdClientConnect(ctx context.Context, c *cli.Command) error {
 			return nil
 
 		case "forward":
-			err = client.ForwardMsg(address, deviceID[:], &rpc.MessagePayload{
-				CipherText: []byte(args[2]),
+
+			var other data.Identifier
+			err = other.FromString(args[1])
+			if err != nil {
+				break
+			}
+			err = client.Send(address, &rpc.ClientEvent{
+				DeviceID:  other[:],
+				RelayAddr: args[2],
+				Body: &rpc.ClientEvent_MessagePayload{
+					MessagePayload: &rpc.MessagePayload{
+						CipherText: []byte(args[3]),
+					},
+				},
 			})
 		}
 

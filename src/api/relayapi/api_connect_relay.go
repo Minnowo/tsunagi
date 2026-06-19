@@ -1,7 +1,9 @@
 package relayapi
 
 import (
+	"context"
 	"io"
+	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -16,14 +18,14 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEv
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
 	if !ok {
-	log.Debug().Msg("relay failed to connect - no auth context")
+		log.Debug().Msg("relay failed to connect - no auth context")
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
-	pubkey, err := this.GetAuthIdentity(md) 
+	pubkey, err := this.GetAuthIdentity(md)
 
 	if err != nil {
-	log.Debug().Err(err).Msg("relay failed to connect - bad token")
+		log.Debug().Err(err).Msg("relay failed to connect - bad token")
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
@@ -43,6 +45,29 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEv
 			return err
 		}
 
-		this.DeliverMessage(stream.Context(), event)
+		err = this.DeliverMessage(stream.Context(), event)
+		if err != nil {
+			log.Error().Err(err).Msg("error delivering message")
+		}
 	}
+}
+
+func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) error {
+
+	var deviceID data.Identifier
+
+	if err := deviceID.FromBytes(req.DeviceID); err != nil {
+		return err
+	}
+
+	switch v := req.Body.(type) {
+
+	case *rpc.RelayEvent_MessagePayload:
+		return this.DeliverMessagePayload(ctx, deviceID, v.MessagePayload.CipherText)
+
+	case *rpc.RelayEvent_NoiseHandshake:
+		return this.DeliverNoiseHandshake(ctx, deviceID, v.NoiseHandshake.State)
+	}
+
+	return nil
 }
