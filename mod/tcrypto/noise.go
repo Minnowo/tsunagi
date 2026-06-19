@@ -21,6 +21,7 @@ type NoiseCiphers struct {
 }
 
 const (
+	// NoiseKeySize the number of bytes of the public key
 	NoiseKeySize = curve25519.PointSize
 )
 

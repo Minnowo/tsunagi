@@ -2,13 +2,14 @@ package tcrypto
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
 var (
-	ErrTruncated = fmt.Errorf("truncated value")
+	ErrTruncated = errors.New("truncated value")
 )
 
 type PasswordEncryptedData struct {
