@@ -241,7 +241,7 @@ async function authenticate() {
   if (step2Res.err) { authLog('senderStep2: ' + step2Res.err, 'err'); return; }
   authLog('senderStep2 ok');
 
-  const decRes = tcrypto.noiseIN.decrypt(step2Res.res.dec, b64ToU8(challenge.auth_challenge));
+  const decRes = tcrypto.noise.decrypt(step2Res.res.dec, b64ToU8(challenge.auth_challenge));
   if (decRes.err) { authLog('decrypt token: ' + decRes.err, 'err'); return; }
   const tokenB64 = u8ToB64(decRes.res);
 
@@ -260,9 +260,9 @@ async function authenticate() {
   document.getElementById('auth-token').value = proveResp.token;
   authLog('authenticated!', 'ok');
 
-  tcrypto.noiseIN.freeHandshake(hsHandle);
-  tcrypto.noiseIN.freeCipher(step2Res.res.enc);
-  tcrypto.noiseIN.freeCipher(step2Res.res.dec);
+  tcrypto.noise.freeHandshake(hsHandle);
+  tcrypto.noise.freeCipher(step2Res.res.enc);
+  tcrypto.noise.freeCipher(step2Res.res.dec);
 }
 
 // ── 3. WebSocket ──────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ function wsConnect() {
       xkOnMessage(parsed);
     } else if (parsed && parsed.type === 'message_payload' && document.getElementById('ws-e2ee').checked) {
       const cipherBytes = b64ToU8(parsed.cipher_text);
-      const r = tcrypto.noiseIN.decrypt(xk.decHandle, cipherBytes);
+      const r = tcrypto.noise.decrypt(xk.decHandle, cipherBytes);
       if (r.err) {
         wsLog('< message_payload [E2EE decrypt failed: ' + r.err + ']', 'err');
       } else {
@@ -342,7 +342,7 @@ function wsSendMessage() {
   let payloadBytes = new TextEncoder().encode(msgText);
   if (e2ee) {
     if (xk.encHandle === null) { wsLog('E2EE enabled but no XK handshake complete', 'err'); return; }
-    const r = tcrypto.noiseIN.encrypt(xk.encHandle, payloadBytes);
+    const r = tcrypto.noise.encrypt(xk.encHandle, payloadBytes);
     if (r.err) { wsLog('E2EE encrypt failed: ' + r.err, 'err'); return; }
     payloadBytes = r.res;
   }

@@ -154,6 +154,7 @@ func main() {
 		"decryptWithPassword":    js.FuncOf(decryptWithPassword),
 		"noiseIN":                noiseINBindings(),
 		"noiseXK":                noiseXKBindings(),
+		"noise":                  noiseBindings(),
 	})
 
 	select {}
