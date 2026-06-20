@@ -6,6 +6,8 @@ import (
 	"sync"
 	"tsunagi/src/data"
 	"tsunagi/src/rpc"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -47,6 +49,8 @@ func (this *ClientConnManager) AddConn(id data.Identifier, conn *ClientConn) boo
 
 	this.connectedUsers[id] = conn
 
+	log.Warn().Str("id", id.String()).Msg("connected user")
+
 	return true
 }
 
@@ -55,6 +59,7 @@ func (this *ClientConnManager) RemoveConn(id data.Identifier) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
+	log.Warn().Str("id", id.String()).Msg("disconnected user")
 	delete(this.connectedUsers, id)
 }
 

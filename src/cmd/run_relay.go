@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/signal"
 	"syscall"
+	"tsunagi/src/api"
 	"tsunagi/src/api/grpcapi"
 	"tsunagi/src/api/httpapi"
 
@@ -27,13 +28,16 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 
 	errCh := make(chan error, 2)
 
-	httpServer, err := buildHttpServer(host, int(httpPort))
+	base := &api.TsunagiBase{}
+	base.Init(nil)
+
+	httpServer, err := buildHttpServer(base, host, int(httpPort))
 
 	if err != nil {
 		return err
 	}
 
-	grpcServer, grpcLis, err := buildGrpcServer(host, int(grpcPort))
+	grpcServer, grpcLis, err := buildGrpcServer(base, host, int(grpcPort))
 
 	if err != nil {
 		return err
@@ -67,7 +71,8 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 		}
 	}
 
-	grpcServer.GracefulStop()
+	// grpcServer.GracefulStop()
+	grpcServer.Stop()
 
 	if err := httpServer.Shutdown(context.Background()); err != nil {
 		log.Error().Err(err).Msg("http shutdown error")
@@ -79,11 +84,27 @@ func CmdServerMain(ctx context.Context, c *cli.Command) error {
 	return nil
 }
 
-func buildHttpServer(host string, port int) (*http.Server, error) {
+func corsAllowAll(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func buildHttpServer(base *api.TsunagiBase, host string, port int) (*http.Server, error) {
 
 	r := chi.NewRouter()
+	r.Use(corsAllowAll)
 
-	server := httpapi.HttpRelayApi{}
+	server := httpapi.HttpRelayApi{
+		TsunagiBase: base,
+	}
 	server.Init(nil)
 	server.Register(r)
 
@@ -93,7 +114,7 @@ func buildHttpServer(host string, port int) (*http.Server, error) {
 	}, nil
 }
 
-func buildGrpcServer(host string, port int) (*grpc.Server, net.Listener, error) {
+func buildGrpcServer(base *api.TsunagiBase, host string, port int) (*grpc.Server, net.Listener, error) {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
@@ -102,7 +123,9 @@ func buildGrpcServer(host string, port int) (*grpc.Server, net.Listener, error) 
 
 	s := grpc.NewServer()
 
-	server := grpcapi.RelayApi{}
+	server := grpcapi.RelayApi{
+		TsunagiBase: base,
+	}
 	server.Init(nil)
 	server.Register(s)
 

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tsunagi Dev</title>
+  <style>
+    body { font-family: monospace; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #111; color: #ccc; }
+    h1 { color: #fff; border-bottom: 1px solid #333; padding-bottom: .4rem; }
+    h2 { color: #aaa; margin-bottom: .5rem; }
+    section { margin-bottom: 2rem; }
+    label { display: inline-block; min-width: 130px; color: #888; }
+    input, textarea { background: #1a1a1a; color: #ccc; border: 1px solid #444; padding: .3rem .5rem; font-family: monospace; width: 340px; }
+    button { background: #2a2a2a; color: #ccc; border: 1px solid #555; padding: .3rem .8rem; cursor: pointer; font-family: monospace; margin: .2rem 0; }
+    button:hover { background: #3a3a3a; }
+    button:disabled { opacity: .4; cursor: default; }
+    pre { background: #1a1a1a; border: 1px solid #333; padding: .6rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; font-size: .85rem; }
+    .row { margin: .4rem 0; }
+    .ok  { color: #4c4; }
+    .err { color: #c44; }
+    #wasm-status { font-size: .85rem; }
+    hr { border-color: #333; }
+  </style>
+</head>
+<body>
+
+<h1>Tsunagi Dev</h1>
+
+<div class="row">
+  <label>Server base:</label>
+  <input id="base-url" value="http://localhost:8080" style="width:200px">
+  &nbsp;
+  <span id="wasm-status" class="err">wasm loading...</span>
+</div>
+
+<hr>
+
+<!-- ── Keypair ─────────────────────────────────────────────── -->
+<section>
+  <h2>1. Keypair</h2>
+  <div class="row"><button onclick="genKeypair()">Generate keypair</button></div>
+  <div class="row"><label>Public key:</label> <input id="kp-pub" readonly></div>
+  <div class="row"><label>Private key:</label> <input id="kp-pri" readonly></div>
+</section>
+
+<hr>
+
+<!-- ── Auth ───────────────────────────────────────────────── -->
+<section>
+  <h2>2. Authenticate (noise IN challenge/prove)</h2>
+  <p style="color:#666;font-size:.85rem">Uses the keypair above. Runs senderStep1 -> POST /auth/challenge -> senderStep2 -> decrypt token -> POST /auth/prove -> stores Bearer token.</p>
+  <div class="row"><button onclick="authenticate()" id="auth-btn">Authenticate</button></div>
+  <div class="row"><label>Token (b64):</label> <input id="auth-token" readonly></div>
+  <pre id="auth-log"></pre>
+</section>
+
+<hr>
+
+<!-- ── WebSocket client ────────────────────────────────────── -->
+<section>
+  <h2>3. WebSocket /ws/client</h2>
+  <div class="row">
+    <button onclick="wsConnect()" id="ws-connect-btn">Connect</button>
+    <button onclick="wsDisconnect()" id="ws-disconnect-btn" disabled>Disconnect</button>
+  </div>
+  <div class="row">
+    <label>Relay addr:</label>
+    <input id="ws-relay-addr" value="grpc://localhost:9090" style="width:200px">
+  </div>
+  <div class="row">
+    <label>Dest pub key:</label>
+    <input id="ws-dest-pub" placeholder="base64 public key of recipient">
+  </div>
+  <div class="row">
+    <label>Message:</label>
+    <input id="ws-msg" placeholder="plaintext (will be sent as cipher_text bytes)">
+    <button onclick="wsSendMessage()" id="ws-send-btn" disabled>Send message</button>
+  </div>
+  <pre id="ws-log"></pre>
+</section>
+
+<hr>
+
+<!-- ── Password crypto ────────────────────────────────────── -->
+<section>
+  <h2>4. Password encrypt / decrypt</h2>
+  <div class="row"><label>Message:</label> <textarea id="pw-message" rows="2" style="width:340px"></textarea></div>
+  <div class="row"><label>Password:</label> <input type="password" id="pw-password"></div>
+  <div class="row">
+    <button onclick="pwEncrypt()">Encrypt</button>
+    <button onclick="pwDecrypt()">Decrypt</button>
+  </div>
+  <pre id="pw-result"></pre>
+</section>
+
+<script src="./dist/wasm_exec.js"></script>
+<script>
+
+// ── WASM setup ────────────────────────────────────────────────────────────────
+
+const go = new Go();
+let wasmLoaded = false;
+let wasmMemory = null;
+
+if (!go.importObject.runtime) go.importObject.runtime = {};
+go.importObject.runtime.getRandomData = function(ptr, len) {
+  crypto.getRandomValues(new Uint8Array(wasmMemory.buffer, ptr, len));
+};
+
+WebAssembly.instantiateStreaming(fetch('./dist/tcrypto.wasm'), go.importObject).then(result => {
+  wasmMemory = result.instance.exports.memory;
+  go.run(result.instance);
+  wasmLoaded = true;
+  document.getElementById('wasm-status').textContent = 'wasm ready';
+  document.getElementById('wasm-status').className = 'ok';
+}).catch(e => {
+  document.getElementById('wasm-status').textContent = 'wasm failed: ' + e;
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function base() { return document.getElementById('base-url').value.replace(/\/$/, ''); }
+
+function u8ToB64(u8) {
+  return btoa(String.fromCharCode(...u8));
+}
+
+function b64ToU8(b64) {
+  const s = atob(b64);
+  const a = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+
+// Go's encoding/json encodes []byte as standard base64 with padding.
+// So JSON fields that are []byte come back as base64 strings already.
+function jsonB64ToU8(b64str) { return b64ToU8(b64str); }
+function u8ToJsonB64(u8) { return u8ToB64(u8); }
+
+function appendLog(id, line, cls) {
+  const el = document.getElementById(id);
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = line + '\n';
+  el.appendChild(span);
+  el.scrollTop = el.scrollHeight;
+}
+
+function authLog(line, cls) { appendLog('auth-log', line, cls); }
+function wsLog(line, cls)   { appendLog('ws-log',  line, cls); }
+
+// ── 1. Keypair ────────────────────────────────────────────────────────────────
+
+function genKeypair() {
+  if (!wasmLoaded) { alert('wasm not ready'); return; }
+  const r = tcrypto.generateKeypair();
+  if (r.err) { alert('keypair error: ' + r.err); return; }
+  document.getElementById('kp-pub').value = u8ToB64(r.res.public);
+  document.getElementById('kp-pri').value = u8ToB64(r.res.private);
+}
+
+// ── 2. Auth ───────────────────────────────────────────────────────────────────
+
+async function authenticate() {
+  if (!wasmLoaded) { alert('wasm not ready'); return; }
+
+  document.getElementById('auth-log').textContent = '';
+  document.getElementById('auth-token').value = '';
+
+  const pubB64 = document.getElementById('kp-pub').value;
+  const priB64 = document.getElementById('kp-pri').value;
+
+  if (!pubB64 || !priB64) {
+    authLog('generate a keypair first', 'err');
+    return;
+  }
+
+  const pub = b64ToU8(pubB64);
+  const pri = b64ToU8(priB64);
+
+  // Step 1: create sender handshake state and produce init message
+  authLog('creating sender handshake state...');
+  const hsRes = tcrypto.noiseIN.newSenderHandshake(pub, pri);
+  if (hsRes.err) { authLog('newSenderHandshake: ' + hsRes.err, 'err'); return; }
+  const hsHandle = hsRes.res.handle;
+
+  const step1Res = tcrypto.noiseIN.senderStep1(hsHandle);
+  if (step1Res.err) { authLog('senderStep1: ' + step1Res.err, 'err'); return; }
+  const initMsg = step1Res.res.msg;
+  authLog('senderStep1 ok, init msg ' + initMsg.length + ' bytes');
+
+  // POST /auth/challenge
+  authLog('POST /auth/challenge...');
+  let challenge;
+  try {
+    const resp = await fetch(base() + '/auth/challenge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pub_key: u8ToJsonB64(pub),
+        handshake_init_msg: u8ToJsonB64(initMsg),
+      }),
+    });
+    if (!resp.ok) { authLog('challenge failed: ' + resp.status + ' ' + await resp.text(), 'err'); return; }
+    challenge = await resp.json();
+  } catch (e) { authLog('challenge request error: ' + e, 'err'); return; }
+  authLog('got challenge, handshake_done_msg ' + challenge.handshake_done_msg.length + ' chars (b64)');
+
+  // Step 2: complete handshake, derive ciphers
+  const doneMsg = jsonB64ToU8(challenge.handshake_done_msg);
+  const step2Res = tcrypto.noiseIN.senderStep2(doneMsg, hsHandle);
+  if (step2Res.err) { authLog('senderStep2: ' + step2Res.err, 'err'); return; }
+  const decHandle = step2Res.res.dec;
+  authLog('senderStep2 ok, cipher handles enc=' + step2Res.res.enc + ' dec=' + decHandle);
+
+  // Decrypt the encrypted token
+  const encryptedToken = jsonB64ToU8(challenge.auth_challenge);
+  const decRes = tcrypto.noiseIN.decrypt(decHandle, encryptedToken);
+  if (decRes.err) { authLog('decrypt token: ' + decRes.err, 'err'); return; }
+  const tokenBytes = decRes.res;
+  const tokenB64 = u8ToB64(tokenBytes);
+  authLog('decrypted token ok, ' + tokenBytes.length + ' bytes');
+
+  // POST /auth/prove
+  authLog('POST /auth/prove...');
+  let proveResp;
+  try {
+    const resp = await fetch(base() + '/auth/prove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signature: tokenB64 }),
+    });
+    if (!resp.ok) { authLog('prove failed: ' + resp.status + ' ' + await resp.text(), 'err'); return; }
+    proveResp = await resp.json();
+  } catch (e) { authLog('prove request error: ' + e, 'err'); return; }
+
+  // The server returns the token as a []byte JSON field (base64 string)
+  const finalTokenB64 = proveResp.token;
+  document.getElementById('auth-token').value = finalTokenB64;
+  authLog('authenticated! token stored.', 'ok');
+
+  tcrypto.noiseIN.freeHandshake(hsHandle);
+  tcrypto.noiseIN.freeCipher(step2Res.res.enc);
+  tcrypto.noiseIN.freeCipher(decHandle);
+}
+
+// ── 3. WebSocket /ws/client ───────────────────────────────────────────────────
+
+let ws = null;
+
+function wsConnect() {
+  const token = document.getElementById('auth-token').value;
+  if (!token) { wsLog('no auth token - authenticate first', 'err'); return; }
+
+  // Browsers cannot set custom headers on WebSocket upgrades,
+  // so the token is passed as a query param.
+  const wsBase = base().replace(/^http/, 'ws');
+  const url = wsBase + '/ws/client?token=' + encodeURIComponent(token);
+  wsLog('connecting to ' + url + '...');
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    wsLog('connected', 'ok');
+    document.getElementById('ws-connect-btn').disabled = true;
+    document.getElementById('ws-disconnect-btn').disabled = false;
+    document.getElementById('ws-send-btn').disabled = false;
+  };
+
+  ws.onclose = (e) => {
+    wsLog('disconnected (code ' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
+    ws = null;
+    document.getElementById('ws-connect-btn').disabled = false;
+    document.getElementById('ws-disconnect-btn').disabled = true;
+    document.getElementById('ws-send-btn').disabled = true;
+  };
+
+  ws.onerror = () => wsLog('websocket error', 'err');
+
+  ws.onmessage = (e) => {
+    wsLog('< ' + e.data);
+  };
+}
+
+function wsDisconnect() {
+  if (ws) ws.close();
+}
+
+function wsSendMessage() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    wsLog('not connected', 'err');
+    return;
+  }
+
+  const pubB64 = document.getElementById('kp-pub').value;
+  const destPubB64 = document.getElementById('ws-dest-pub').value;
+  const relayAddr = document.getElementById('ws-relay-addr').value;
+  const msgText = document.getElementById('ws-msg').value;
+
+  if (!destPubB64) { wsLog('enter a destination public key', 'err'); return; }
+
+  const cipherText = new TextEncoder().encode(msgText);
+
+  const event = {
+    pub_key: destPubB64,
+    relay_addr: relayAddr,
+    type: 'message_payload',
+    cipher_text: u8ToJsonB64(cipherText),
+  };
+
+  const json = JSON.stringify(event);
+  ws.send(json);
+  wsLog('> ' + json);
+  document.getElementById('ws-msg').value = '';
+}
+
+// ── 4. Password crypto ────────────────────────────────────────────────────────
+
+function pwEncrypt() {
+  if (!wasmLoaded) { alert('wasm not ready'); return; }
+  const msg  = document.getElementById('pw-message').value;
+  const pass = document.getElementById('pw-password').value;
+  const r = tcrypto.encryptStrWithPassword(msg, pass);
+  if (r.err) {
+    document.getElementById('pw-result').textContent = 'Error: ' + r.err;
+  } else {
+    document.getElementById('pw-result').textContent = u8ToB64(r.res);
+  }
+}
+
+function pwDecrypt() {
+  if (!wasmLoaded) { alert('wasm not ready'); return; }
+  const b64  = document.getElementById('pw-message').value;
+  const pass = document.getElementById('pw-password').value;
+  const r = tcrypto.decryptWithPassword(b64ToU8(b64), pass);
+  if (r.err) {
+    document.getElementById('pw-result').textContent = 'Error: ' + r.err;
+  } else {
+    document.getElementById('pw-result').textContent = new TextDecoder().decode(r.res);
+  }
+}
+
+</script>
+</body>
+</html>

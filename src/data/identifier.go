@@ -2,7 +2,7 @@ package data
 
 import (
 	"database/sql/driver"
-	"encoding/base32"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +13,9 @@ import (
 var (
 	ErrInvalidIdentifier = errors.New("invalid identifier")
 )
-var strEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)
+
+// var strEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)
+var strEncoding = base64.StdEncoding
 
 type Identifier [tcrypto.NoiseKeySize]byte
 

@@ -13,7 +13,7 @@ import (
 type RelayApi struct {
 	rpc.UnimplementedTsunagiServer
 	rpc.UnimplementedAuthServer
-	api.TsunagiBase
+	*api.TsunagiBase
 }
 
 func (this *RelayApi) GetAuthIdentity(md metadata.MD) ([]byte, error) {

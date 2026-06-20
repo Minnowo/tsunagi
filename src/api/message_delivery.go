@@ -47,12 +47,12 @@ func (this *TsunagiBase) DeliverMessagePayload(ctx context.Context, id data.Iden
 	})
 
 	if ok {
-		log.Info().Msg("message delivered to client")
+		log.Info().Str("device", id.String()).Msg("message delivered to client")
 		return nil
 	}
 
 	// else save message in the database
-	log.Info().Msg("message put in the DB (not really)")
+	log.Info().Str("device", id.String()).Msg("message put in the DB (not really)")
 
 	return nil
 }

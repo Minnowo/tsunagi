@@ -15,6 +15,7 @@ import (
 var (
 	ErrInvalidNumberOfArguments = fmt.Errorf("invalid number of arguments")
 	ErrArgumentWasntUint8Array  = fmt.Errorf("expected Uint8Array or Uint8ClampedArray")
+	ErrInvalidHandle            = fmt.Errorf("invalid handle")
 )
 
 var (
@@ -151,6 +152,8 @@ func main() {
 		"encryptWithPassword":    js.FuncOf(encryptWithPassword),
 		"encryptStrWithPassword": js.FuncOf(encryptStrWithPassword),
 		"decryptWithPassword":    js.FuncOf(decryptWithPassword),
+		"noiseIN":                noiseINBindings(),
+		"noiseXK":                noiseXKBindings(),
 	})
 
 	select {}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"tsunagi/src/api"
+	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
 	"github.com/coder/websocket"
@@ -38,10 +39,19 @@ func (ev *wsRelayInEvent) toProto() *rpc.RelayEvent {
 
 func (h *HttpRelayApi) apiConnectRelay(w http.ResponseWriter, r *http.Request) {
 
-	if _, err := h.getAuthIdentity(r); err != nil {
+	pubkey, err := h.getAuthIdentity(r)
+
+	if err != nil {
 		api.Unauthorized(w)
 		return
 	}
+
+	var id data.Identifier
+	if err := id.FromBytes(pubkey); err != nil {
+		api.Unauthorized(w)
+		return
+	}
+	log.Debug().Hex("deviceID", pubkey).Msg("relay connected")
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},

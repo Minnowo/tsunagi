@@ -79,6 +79,7 @@ func (h *HttpRelayApi) apiConnectClient(w http.ResponseWriter, r *http.Request) 
 		api.Unauthorized(w)
 		return
 	}
+	log.Debug().Str("deviceID", id.String()).Msg("client device connected")
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
@@ -141,6 +142,8 @@ func (h *HttpRelayApi) apiConnectClient(w http.ResponseWriter, r *http.Request) 
 			log.Debug().Err(err).Msg("connect_client: unmarshal error")
 			continue
 		}
+
+		log.Info().Interface("msg", ev).Msg("got msg")
 
 		if err := h.ForwardMessage(ctx, ev.toProto()); err != nil {
 			log.Error().Err(err).Msg("connect_client: forward error")
