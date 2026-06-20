@@ -29,8 +29,21 @@ func (this *TsunagiBase) DeliverMessage(ctx context.Context, req *rpc.RelayEvent
 func (this *TsunagiBase) DeliverNoiseHandshake(ctx context.Context, id data.Identifier, noiseMsg []byte) error {
 
 	// check if id user is online, if so, pass message directly to them
+	ok := this.ClientConns.PutRelayMsg(id, &rpc.RelayEvent{
+		Body: &rpc.RelayEvent_NoiseHandshake{
+			NoiseHandshake: &rpc.NoiseHandshake{
+				State: noiseMsg,
+			},
+		},
+	})
+
+	if ok {
+		log.Info().Str("device", id.String()).Msg("message delivered to client")
+		return nil
+	}
 
 	// else save message in the database
+	log.Info().Str("device", id.String()).Msg("message put in the DB (not really)")
 
 	return nil
 }

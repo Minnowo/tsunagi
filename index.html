@@ -3,11 +3,11 @@
 <head>
   <title>Tsunagi Dev</title>
   <style>
-    body { font-family: monospace; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #111; color: #ccc; }
+    body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #111; color: #ccc; }
     h1 { color: #fff; border-bottom: 1px solid #333; padding-bottom: .4rem; }
     h2 { color: #aaa; margin-bottom: .5rem; }
     section { margin-bottom: 2rem; }
-    label { display: inline-block; min-width: 130px; color: #888; }
+    label { display: inline-block; min-width: 140px; color: #888; }
     input, textarea { background: #1a1a1a; color: #ccc; border: 1px solid #444; padding: .3rem .5rem; font-family: monospace; width: 340px; }
     button { background: #2a2a2a; color: #ccc; border: 1px solid #555; padding: .3rem .8rem; cursor: pointer; font-family: monospace; margin: .2rem 0; }
     button:hover { background: #3a3a3a; }
@@ -16,8 +16,11 @@
     .row { margin: .4rem 0; }
     .ok  { color: #4c4; }
     .err { color: #c44; }
+    .info { color: #48f; }
     #wasm-status { font-size: .85rem; }
     hr { border-color: #333; }
+    .role-btn { border: 1px solid #555; }
+    .role-btn.active { background: #1a3a1a; border-color: #4c4; color: #4c4; }
   </style>
 </head>
 <body>
@@ -33,7 +36,7 @@
 
 <hr>
 
-<!-- ── Keypair ─────────────────────────────────────────────── -->
+<!-- ── 1. Keypair ──────────────────────────────────────────── -->
 <section>
   <h2>1. Keypair</h2>
   <div class="row"><button onclick="genKeypair()">Generate keypair</button></div>
@@ -43,18 +46,18 @@
 
 <hr>
 
-<!-- ── Auth ───────────────────────────────────────────────── -->
+<!-- ── 2. Auth ────────────────────────────────────────────── -->
 <section>
-  <h2>2. Authenticate (noise IN challenge/prove)</h2>
-  <p style="color:#666;font-size:.85rem">Uses the keypair above. Runs senderStep1 -> POST /auth/challenge -> senderStep2 -> decrypt token -> POST /auth/prove -> stores Bearer token.</p>
-  <div class="row"><button onclick="authenticate()" id="auth-btn">Authenticate</button></div>
+  <h2>2. Authenticate (noise IN challenge / prove)</h2>
+  <p style="color:#666;font-size:.85rem">Uses keypair above. senderStep1 -> POST /auth/challenge -> senderStep2 -> decrypt token -> POST /auth/prove -> stores Bearer token.</p>
+  <div class="row"><button onclick="authenticate()">Authenticate</button></div>
   <div class="row"><label>Token (b64):</label> <input id="auth-token" readonly></div>
   <pre id="auth-log"></pre>
 </section>
 
 <hr>
 
-<!-- ── WebSocket client ────────────────────────────────────── -->
+<!-- ── 3. WebSocket ───────────────────────────────────────── -->
 <section>
   <h2>3. WebSocket /ws/client</h2>
   <div class="row">
@@ -70,18 +73,59 @@
     <input id="ws-dest-pub" placeholder="base64 public key of recipient">
   </div>
   <div class="row">
+    <label>E2EE:</label>
+    <input type="checkbox" id="ws-e2ee" style="width:auto">
+    <span style="color:#666;font-size:.85rem">&nbsp;encrypt/decrypt using XK cipher handles (requires completed handshake)</span>
+  </div>
+  <div class="row">
     <label>Message:</label>
-    <input id="ws-msg" placeholder="plaintext (will be sent as cipher_text bytes)">
-    <button onclick="wsSendMessage()" id="ws-send-btn" disabled>Send message</button>
+    <input id="ws-msg" placeholder="plaintext when E2EE on, raw bytes otherwise">
+    <button onclick="wsSendMessage()" id="ws-send-btn" disabled>Send</button>
   </div>
   <pre id="ws-log"></pre>
 </section>
 
 <hr>
 
-<!-- ── Password crypto ────────────────────────────────────── -->
+<!-- ── 4. Noise XK handshake ─────────────────────────────── -->
 <section>
-  <h2>4. Password encrypt / decrypt</h2>
+  <h2>4. Noise XK handshake</h2>
+  <p style="color:#666;font-size:.85rem">
+    Ping-pong over the WS connection. Both tabs must be connected (section 3)
+    and authenticated with their own keypairs. Sender initiates; responder
+    reacts automatically to incoming noise_handshake messages.
+  </p>
+
+  <div class="row">
+    <label>Role:</label>
+    <button class="role-btn" id="xk-role-sender"   onclick="xkSetRole('sender')">Sender</button>
+    <button class="role-btn" id="xk-role-responder" onclick="xkSetRole('responder')">Responder</button>
+    &nbsp; <span id="xk-status" style="color:#666">idle</span>
+  </div>
+  <div class="row">
+    <label>Peer pub key:</label>
+    <input id="xk-peer-pub" placeholder="base64 public key of the other party">
+  </div>
+  <div class="row">
+    <label>Relay addr:</label>
+    <input id="xk-relay-addr" value="grpc://localhost:9090" style="width:200px">
+  </div>
+  <div class="row">
+    <button onclick="xkStart()" id="xk-start-btn" disabled>Start handshake (sender)</button>
+    <button onclick="xkReset()">Reset</button>
+  </div>
+  <div class="row">
+    <label>Enc handle:</label> <input id="xk-enc" readonly style="width:60px">
+    &nbsp;<label>Dec handle:</label> <input id="xk-dec" readonly style="width:60px">
+  </div>
+  <pre id="xk-log"></pre>
+</section>
+
+<hr>
+
+<!-- ── 5. Password crypto ─────────────────────────────────── -->
+<section>
+  <h2>5. Password encrypt / decrypt</h2>
   <div class="row"><label>Message:</label> <textarea id="pw-message" rows="2" style="width:340px"></textarea></div>
   <div class="row"><label>Password:</label> <input type="password" id="pw-password"></div>
   <div class="row">
@@ -94,7 +138,7 @@
 <script src="./dist/wasm_exec.js"></script>
 <script>
 
-// ── WASM setup ────────────────────────────────────────────────────────────────
+// ── WASM ──────────────────────────────────────────────────────────────────────
 
 const go = new Go();
 let wasmLoaded = false;
@@ -130,11 +174,6 @@ function b64ToU8(b64) {
   return a;
 }
 
-// Go's encoding/json encodes []byte as standard base64 with padding.
-// So JSON fields that are []byte come back as base64 strings already.
-function jsonB64ToU8(b64str) { return b64ToU8(b64str); }
-function u8ToJsonB64(u8) { return u8ToB64(u8); }
-
 function appendLog(id, line, cls) {
   const el = document.getElementById(id);
   const span = document.createElement('span');
@@ -144,8 +183,9 @@ function appendLog(id, line, cls) {
   el.scrollTop = el.scrollHeight;
 }
 
-function authLog(line, cls) { appendLog('auth-log', line, cls); }
-function wsLog(line, cls)   { appendLog('ws-log',  line, cls); }
+function authLog(l, c) { appendLog('auth-log', l, c); }
+function wsLog(l, c)   { appendLog('ws-log',   l, c); }
+function xkLog(l, c)   { appendLog('xk-log',   l, c); }
 
 // ── 1. Keypair ────────────────────────────────────────────────────────────────
 
@@ -167,27 +207,20 @@ async function authenticate() {
 
   const pubB64 = document.getElementById('kp-pub').value;
   const priB64 = document.getElementById('kp-pri').value;
-
-  if (!pubB64 || !priB64) {
-    authLog('generate a keypair first', 'err');
-    return;
-  }
+  if (!pubB64 || !priB64) { authLog('generate a keypair first', 'err'); return; }
 
   const pub = b64ToU8(pubB64);
   const pri = b64ToU8(priB64);
 
-  // Step 1: create sender handshake state and produce init message
-  authLog('creating sender handshake state...');
+  authLog('newSenderHandshake...');
   const hsRes = tcrypto.noiseIN.newSenderHandshake(pub, pri);
   if (hsRes.err) { authLog('newSenderHandshake: ' + hsRes.err, 'err'); return; }
   const hsHandle = hsRes.res.handle;
 
   const step1Res = tcrypto.noiseIN.senderStep1(hsHandle);
   if (step1Res.err) { authLog('senderStep1: ' + step1Res.err, 'err'); return; }
-  const initMsg = step1Res.res.msg;
-  authLog('senderStep1 ok, init msg ' + initMsg.length + ' bytes');
+  authLog('senderStep1 ok (' + step1Res.res.msg.length + ' bytes)');
 
-  // POST /auth/challenge
   authLog('POST /auth/challenge...');
   let challenge;
   try {
@@ -195,31 +228,23 @@ async function authenticate() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        pub_key: u8ToJsonB64(pub),
-        handshake_init_msg: u8ToJsonB64(initMsg),
+        pub_key: u8ToB64(pub),
+        handshake_init_msg: u8ToB64(step1Res.res.msg),
       }),
     });
-    if (!resp.ok) { authLog('challenge failed: ' + resp.status + ' ' + await resp.text(), 'err'); return; }
+    if (!resp.ok) { authLog('challenge ' + resp.status + ': ' + await resp.text(), 'err'); return; }
     challenge = await resp.json();
-  } catch (e) { authLog('challenge request error: ' + e, 'err'); return; }
-  authLog('got challenge, handshake_done_msg ' + challenge.handshake_done_msg.length + ' chars (b64)');
+  } catch (e) { authLog('challenge error: ' + e, 'err'); return; }
+  authLog('got challenge');
 
-  // Step 2: complete handshake, derive ciphers
-  const doneMsg = jsonB64ToU8(challenge.handshake_done_msg);
-  const step2Res = tcrypto.noiseIN.senderStep2(doneMsg, hsHandle);
+  const step2Res = tcrypto.noiseIN.senderStep2(b64ToU8(challenge.handshake_done_msg), hsHandle);
   if (step2Res.err) { authLog('senderStep2: ' + step2Res.err, 'err'); return; }
-  const decHandle = step2Res.res.dec;
-  authLog('senderStep2 ok, cipher handles enc=' + step2Res.res.enc + ' dec=' + decHandle);
+  authLog('senderStep2 ok');
 
-  // Decrypt the encrypted token
-  const encryptedToken = jsonB64ToU8(challenge.auth_challenge);
-  const decRes = tcrypto.noiseIN.decrypt(decHandle, encryptedToken);
+  const decRes = tcrypto.noiseIN.decrypt(step2Res.res.dec, b64ToU8(challenge.auth_challenge));
   if (decRes.err) { authLog('decrypt token: ' + decRes.err, 'err'); return; }
-  const tokenBytes = decRes.res;
-  const tokenB64 = u8ToB64(tokenBytes);
-  authLog('decrypted token ok, ' + tokenBytes.length + ' bytes');
+  const tokenB64 = u8ToB64(decRes.res);
 
-  // POST /auth/prove
   authLog('POST /auth/prove...');
   let proveResp;
   try {
@@ -228,21 +253,19 @@ async function authenticate() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ signature: tokenB64 }),
     });
-    if (!resp.ok) { authLog('prove failed: ' + resp.status + ' ' + await resp.text(), 'err'); return; }
+    if (!resp.ok) { authLog('prove ' + resp.status + ': ' + await resp.text(), 'err'); return; }
     proveResp = await resp.json();
-  } catch (e) { authLog('prove request error: ' + e, 'err'); return; }
+  } catch (e) { authLog('prove error: ' + e, 'err'); return; }
 
-  // The server returns the token as a []byte JSON field (base64 string)
-  const finalTokenB64 = proveResp.token;
-  document.getElementById('auth-token').value = finalTokenB64;
-  authLog('authenticated! token stored.', 'ok');
+  document.getElementById('auth-token').value = proveResp.token;
+  authLog('authenticated!', 'ok');
 
   tcrypto.noiseIN.freeHandshake(hsHandle);
   tcrypto.noiseIN.freeCipher(step2Res.res.enc);
-  tcrypto.noiseIN.freeCipher(decHandle);
+  tcrypto.noiseIN.freeCipher(step2Res.res.dec);
 }
 
-// ── 3. WebSocket /ws/client ───────────────────────────────────────────────────
+// ── 3. WebSocket ──────────────────────────────────────────────────────────────
 
 let ws = null;
 
@@ -250,8 +273,6 @@ function wsConnect() {
   const token = document.getElementById('auth-token').value;
   if (!token) { wsLog('no auth token - authenticate first', 'err'); return; }
 
-  // Browsers cannot set custom headers on WebSocket upgrades,
-  // so the token is passed as a query param.
   const wsBase = base().replace(/^http/, 'ws');
   const url = wsBase + '/ws/client?token=' + encodeURIComponent(token);
   wsLog('connecting to ' + url + '...');
@@ -259,23 +280,41 @@ function wsConnect() {
 
   ws.onopen = () => {
     wsLog('connected', 'ok');
-    document.getElementById('ws-connect-btn').disabled = true;
+    document.getElementById('ws-connect-btn').disabled    = true;
     document.getElementById('ws-disconnect-btn').disabled = false;
-    document.getElementById('ws-send-btn').disabled = false;
+    document.getElementById('ws-send-btn').disabled       = false;
+    document.getElementById('xk-start-btn').disabled      = (xk.role !== 'sender');
   };
 
   ws.onclose = (e) => {
     wsLog('disconnected (code ' + e.code + (e.reason ? ': ' + e.reason : '') + ')');
     ws = null;
-    document.getElementById('ws-connect-btn').disabled = false;
+    document.getElementById('ws-connect-btn').disabled    = false;
     document.getElementById('ws-disconnect-btn').disabled = true;
-    document.getElementById('ws-send-btn').disabled = true;
+    document.getElementById('ws-send-btn').disabled       = true;
+    document.getElementById('xk-start-btn').disabled      = true;
   };
 
   ws.onerror = () => wsLog('websocket error', 'err');
 
   ws.onmessage = (e) => {
-    wsLog('< ' + e.data);
+    let parsed;
+    try { parsed = JSON.parse(e.data); } catch (_) {}
+
+    if (parsed && parsed.type === 'noise_handshake') {
+      wsLog('< noise_handshake (' + (parsed.state ? b64ToU8(parsed.state).length : '?') + ' bytes)', 'info');
+      xkOnMessage(parsed);
+    } else if (parsed && parsed.type === 'message_payload' && document.getElementById('ws-e2ee').checked) {
+      const cipherBytes = b64ToU8(parsed.cipher_text);
+      const r = tcrypto.noiseIN.decrypt(xk.decHandle, cipherBytes);
+      if (r.err) {
+        wsLog('< message_payload [E2EE decrypt failed: ' + r.err + ']', 'err');
+      } else {
+        wsLog('< [E2EE] ' + new TextDecoder().decode(r.res));
+      }
+    } else {
+      wsLog('< ' + e.data);
+    }
   };
 }
 
@@ -283,46 +322,209 @@ function wsDisconnect() {
   if (ws) ws.close();
 }
 
-function wsSendMessage() {
+function wsSend(event) {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     wsLog('not connected', 'err');
-    return;
+    return false;
   }
-
-  const pubB64 = document.getElementById('kp-pub').value;
-  const destPubB64 = document.getElementById('ws-dest-pub').value;
-  const relayAddr = document.getElementById('ws-relay-addr').value;
-  const msgText = document.getElementById('ws-msg').value;
-
-  if (!destPubB64) { wsLog('enter a destination public key', 'err'); return; }
-
-  const cipherText = new TextEncoder().encode(msgText);
-
-  const event = {
-    pub_key: destPubB64,
-    relay_addr: relayAddr,
-    type: 'message_payload',
-    cipher_text: u8ToJsonB64(cipherText),
-  };
-
   const json = JSON.stringify(event);
   ws.send(json);
-  wsLog('> ' + json);
-  document.getElementById('ws-msg').value = '';
+  return true;
 }
 
-// ── 4. Password crypto ────────────────────────────────────────────────────────
+function wsSendMessage() {
+  const destPubB64 = document.getElementById('ws-dest-pub').value;
+  const relayAddr  = document.getElementById('ws-relay-addr').value;
+  const msgText    = document.getElementById('ws-msg').value;
+  const e2ee       = document.getElementById('ws-e2ee').checked;
+  if (!destPubB64) { wsLog('enter a destination public key', 'err'); return; }
+
+  let payloadBytes = new TextEncoder().encode(msgText);
+  if (e2ee) {
+    if (xk.encHandle === null) { wsLog('E2EE enabled but no XK handshake complete', 'err'); return; }
+    const r = tcrypto.noiseIN.encrypt(xk.encHandle, payloadBytes);
+    if (r.err) { wsLog('E2EE encrypt failed: ' + r.err, 'err'); return; }
+    payloadBytes = r.res;
+  }
+
+  const ok = wsSend({
+    pub_key:     destPubB64,
+    relay_addr:  relayAddr,
+    type:        'message_payload',
+    cipher_text: u8ToB64(payloadBytes),
+  });
+  if (ok) {
+    wsLog('> message_payload' + (e2ee ? ' [E2EE]' : '') + ' to ' + destPubB64.slice(0, 12) + '...');
+    document.getElementById('ws-msg').value = '';
+  }
+}
+
+// ── 4. Noise XK state machine ─────────────────────────────────────────────────
+//
+// Sender:    step1 -> [send msg1] -> recv msg2 -> step2 -> step3 -> [send msg3] -> done (enc/dec)
+// Responder: recv msg1 -> responderStep1 -> [send msg2] -> recv msg3 -> responderStep2 -> done (enc/dec)
+//
+// Both sides need the peer's pub key to route their outgoing messages.
+
+const xk = {
+  role:      null,   // 'sender' | 'responder'
+  handle:    null,   // handshake state handle (freed on reset/done)
+  step:      0,      // how many noise_handshake messages we've processed
+  encHandle: null,
+  decHandle: null,
+};
+
+function xkSetStatus(msg, cls) {
+  const el = document.getElementById('xk-status');
+  el.textContent = msg;
+  el.className = cls || '';
+}
+
+function xkSetRole(role) {
+  xkReset();
+  xk.role = role;
+  document.getElementById('xk-role-sender').classList.toggle('active',   role === 'sender');
+  document.getElementById('xk-role-responder').classList.toggle('active', role === 'responder');
+  document.getElementById('xk-start-btn').disabled = (role !== 'sender') || !ws || ws.readyState !== WebSocket.OPEN;
+  xkSetStatus('role: ' + role);
+  xkLog('role set to ' + role);
+}
+
+function xkReset() {
+  if (xk.handle    !== null) { tcrypto.noiseXK.freeHandshake(xk.handle); }
+  if (xk.encHandle !== null) { tcrypto.noiseXK.freeCipher(xk.encHandle); }
+  if (xk.decHandle !== null) { tcrypto.noiseXK.freeCipher(xk.decHandle); }
+  xk.handle = xk.encHandle = xk.decHandle = null;
+  xk.step = 0;
+  document.getElementById('xk-enc').value = '';
+  document.getElementById('xk-dec').value = '';
+  xkSetStatus(xk.role ? 'role: ' + xk.role : 'idle');
+  xkLog('reset');
+}
+
+function xkSendHandshake(stateBytes) {
+  const peerPubB64  = document.getElementById('xk-peer-pub').value;
+  const relayAddr   = document.getElementById('xk-relay-addr').value;
+  if (!peerPubB64) { xkLog('peer pub key required', 'err'); return false; }
+  return wsSend({
+    pub_key:    peerPubB64,
+    relay_addr: relayAddr,
+    type:       'noise_handshake',
+    state:      u8ToB64(stateBytes),
+  });
+}
+
+function xkDone(encHandle, decHandle) {
+  xk.encHandle = encHandle;
+  xk.decHandle = decHandle;
+  document.getElementById('xk-enc').value = encHandle;
+  document.getElementById('xk-dec').value = decHandle;
+  xkSetStatus('complete - ciphers ready', 'ok');
+  xkLog('handshake complete. enc=' + encHandle + ' dec=' + decHandle, 'ok');
+  // free the handshake state, no longer needed
+  if (xk.handle !== null) { tcrypto.noiseXK.freeHandshake(xk.handle); xk.handle = null; }
+}
+
+// Sender starts the handshake.
+function xkStart() {
+  if (!wasmLoaded) { alert('wasm not ready'); return; }
+  if (xk.role !== 'sender') { xkLog('set role to sender first', 'err'); return; }
+  if (!ws || ws.readyState !== WebSocket.OPEN) { xkLog('connect WS first', 'err'); return; }
+  if (xk.step !== 0) { xkLog('already in progress - reset first', 'err'); return; }
+
+  const pubB64     = document.getElementById('kp-pub').value;
+  const priB64     = document.getElementById('kp-pri').value;
+  const peerPubB64 = document.getElementById('xk-peer-pub').value;
+  if (!pubB64 || !priB64)  { xkLog('generate a keypair first', 'err'); return; }
+  if (!peerPubB64)          { xkLog('enter peer pub key', 'err'); return; }
+
+  xkLog('creating sender XK state...');
+  const hsRes = tcrypto.noiseXK.newSenderHandshake(b64ToU8(peerPubB64), b64ToU8(pubB64), b64ToU8(priB64));
+  if (hsRes.err) { xkLog('newSenderHandshake: ' + hsRes.err, 'err'); return; }
+  xk.handle = hsRes.res.handle;
+
+  xkLog('doing XK step 1...');
+  const s1 = tcrypto.noiseXK.senderStep1(xk.handle);
+  if (s1.err) { xkLog('senderStep1: ' + s1.err, 'err'); return; }
+  xkLog('senderStep1 ok (' + s1.res.msg.length + ' bytes) - sending msg1...');
+
+  if (!xkSendHandshake(s1.res.msg)) return;
+  xk.step = 1;
+  xkSetStatus('sender: waiting for msg2...');
+  xkLog('msg1 sent, waiting for responder...');
+}
+
+// Called whenever a noise_handshake WS message arrives.
+function xkOnMessage(ev) {
+  if (!wasmLoaded) return;
+  if (!xk.role) { xkLog('received noise_handshake but no role set - ignoring', 'err'); return; }
+
+  const stateBytes = b64ToU8(ev.state);
+
+  if (xk.role === 'responder') {
+    xkOnMessageResponder(stateBytes);
+  } else {
+    xkOnMessageSender(stateBytes);
+  }
+}
+
+function xkOnMessageResponder(stateBytes) {
+  if (xk.step === 0) {
+    // Received msg1 - create state and do responderStep1
+    const pubB64 = document.getElementById('kp-pub').value;
+    const priB64 = document.getElementById('kp-pri').value;
+    if (!pubB64 || !priB64) { xkLog('generate a keypair first', 'err'); return; }
+
+    xkLog('received msg1 - creating responder XK state...');
+    const hsRes = tcrypto.noiseXK.newResponderHandshake(b64ToU8(pubB64), b64ToU8(priB64));
+    if (hsRes.err) { xkLog('newResponderHandshake: ' + hsRes.err, 'err'); return; }
+    xk.handle = hsRes.res.handle;
+
+    const s1 = tcrypto.noiseXK.responderStep1(stateBytes, xk.handle);
+    if (s1.err) { xkLog('responderStep1: ' + s1.err, 'err'); return; }
+    xkLog('responderStep1 ok (' + s1.res.msg.length + ' bytes) - sending msg2...');
+
+    if (!xkSendHandshake(s1.res.msg)) return;
+    xk.step = 1;
+    xkSetStatus('responder: waiting for msg3...');
+    xkLog('msg2 sent, waiting for sender...');
+
+  } else if (xk.step === 1) {
+    // Received msg3 - responderStep2 -> done
+    xkLog('received msg3 - responderStep2...');
+    const s2 = tcrypto.noiseXK.responderStep2(stateBytes, xk.handle);
+    if (s2.err) { xkLog('responderStep2: ' + s2.err, 'err'); return; }
+    xk.step = 2;
+    xkDone(s2.res.enc, s2.res.dec);
+  }
+}
+
+function xkOnMessageSender(stateBytes) {
+  if (xk.step === 1) {
+    // Received msg2 - senderStep2, then senderStep3 -> send msg3
+    xkLog('received msg2 - senderStep2...');
+    const s2 = tcrypto.noiseXK.senderStep2(stateBytes, xk.handle);
+    if (s2.err) { xkLog('senderStep2: ' + s2.err, 'err'); return; }
+    xkLog('senderStep2 ok - senderStep3...');
+
+    const s3 = tcrypto.noiseXK.senderStep3(xk.handle);
+    if (s3.err) { xkLog('senderStep3: ' + s3.err, 'err'); return; }
+    xkLog('senderStep3 ok (' + s3.res.msg.length + ' bytes) - sending msg3...');
+
+    if (!xkSendHandshake(s3.res.msg)) return;
+    xk.step = 2;
+    xkDone(s3.res.enc, s3.res.dec);
+  }
+}
+
+// ── 5. Password crypto ────────────────────────────────────────────────────────
 
 function pwEncrypt() {
   if (!wasmLoaded) { alert('wasm not ready'); return; }
   const msg  = document.getElementById('pw-message').value;
   const pass = document.getElementById('pw-password').value;
   const r = tcrypto.encryptStrWithPassword(msg, pass);
-  if (r.err) {
-    document.getElementById('pw-result').textContent = 'Error: ' + r.err;
-  } else {
-    document.getElementById('pw-result').textContent = u8ToB64(r.res);
-  }
+  document.getElementById('pw-result').textContent = r.err ? 'Error: ' + r.err : u8ToB64(r.res);
 }
 
 function pwDecrypt() {
@@ -330,11 +532,7 @@ function pwDecrypt() {
   const b64  = document.getElementById('pw-message').value;
   const pass = document.getElementById('pw-password').value;
   const r = tcrypto.decryptWithPassword(b64ToU8(b64), pass);
-  if (r.err) {
-    document.getElementById('pw-result').textContent = 'Error: ' + r.err;
-  } else {
-    document.getElementById('pw-result').textContent = new TextDecoder().decode(r.res);
-  }
+  document.getElementById('pw-result').textContent = r.err ? 'Error: ' + r.err : new TextDecoder().decode(r.res);
 }
 
 </script>
