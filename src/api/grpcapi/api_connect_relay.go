@@ -1,9 +1,7 @@
-package relayapi
+package grpcapi
 
 import (
-	"context"
 	"io"
-	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -50,24 +48,4 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEv
 			log.Error().Err(err).Msg("error delivering message")
 		}
 	}
-}
-
-func (this *RelayApi) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) error {
-
-	var deviceID data.Identifier
-
-	if err := deviceID.FromBytes(req.PubKey); err != nil {
-		return err
-	}
-
-	switch v := req.Body.(type) {
-
-	case *rpc.RelayEvent_MessagePayload:
-		return this.DeliverMessagePayload(ctx, deviceID, v.MessagePayload.CipherText)
-
-	case *rpc.RelayEvent_NoiseHandshake:
-		return this.DeliverNoiseHandshake(ctx, deviceID, v.NoiseHandshake.State)
-	}
-
-	return nil
 }

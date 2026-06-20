@@ -1,4 +1,4 @@
-package relayapi
+package grpcapi
 
 import (
 	"encoding/base64"
