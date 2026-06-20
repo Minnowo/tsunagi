@@ -8,42 +8,28 @@ tsunagi is the client-server and relay-server implementation for the Pulsar netw
 ### Prerequisites
 
 - Go 1.26+
+- Docker (if you want to build the wasm module)
 
 ### Build
 
+To build the relay:
 ```sh
 go build -o tsunagi .
 ```
 
+To build the wasm module, make sure you have Docker, and then use the Makefile:
+```sh
+make tinygo
+```
+
+Alternatively read the Makefile and run the commands on your own.
+
 ### Usage
 
-**Initialize a session identity:**
+**Run the relay server**:
 ```sh
-./tsunagi session init
+go run main.go run --http-port 7470 --grpc-port 7471
 ```
 
-**Run the relay server** (default: `0.0.0.0:7471`):
-```sh
-./tsunagi run
-./tsunagi run --host 0.0.0.0 --port 7471
-```
-
-**Run the client WebSocket server** (default: `0.0.0.0:8080`):
-```sh
-./tsunagi client-server
-./tsunagi client-server --host 0.0.0.0 --port 8080
-```
-
-**Connect a CLI client to the relay server:**
-```sh
-./tsunagi client connect --addr tcp://localhost:7471/
-./tsunagi client connect --addr tcp://localhost:7471/ --device <device-id>
-```
-
-**Connect a relay node:**
-```sh
-./tsunagi relay connect --addr tcp://localhost:7471/
-./tsunagi relay connect --addr tcp://localhost:7471/ --device <device-id>
-```
-
+There is a very bad CLI client to talk to relays over GRPC also, but i'm not going to document it now.
 
