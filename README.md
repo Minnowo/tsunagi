@@ -1,7 +1,7 @@
 
 ## tsunagi
 
-tsunagi is the client-server and relay-server implementation for the Pulsar network.
+tsunagi is the client-server, relay-server, and crypto implementation for the Pulsar network.
 
 ## Running
 
