@@ -59,7 +59,7 @@ func (this *RelayApi) ConnectRelay(stream grpc.BidiStreamingServer[rpc.RelayEven
 			log.Error().Err(err).Msg("error delivering message")
 		}
 
-		stream.SendMsg(rpc.RelayAck{
+		stream.SendMsg(&rpc.RelayAck{
 			MessageID: msgID,
 		})
 	}

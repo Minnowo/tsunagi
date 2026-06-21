@@ -45,12 +45,13 @@ type RelayRelayClientEvent struct {
 
 func NewRelayRelayStream(conn *TsunagiConn, ackchan chan<- ClientAck, sendChanSize int) *RelayRelayStream {
 	return &RelayRelayStream{
-		conn:      conn,
-		didStart:  false,
-		didExit:   false,
-		sendAckCh: ackchan,
-		send:      make(chan RelayRelayClientEvent, sendChanSize),
-		exit:      make(chan struct{}),
+		conn:       conn,
+		didStart:   false,
+		didExit:    false,
+		sendAckCh:  ackchan,
+		pendingAck: make(map[uint64]ClientAck),
+		send:       make(chan RelayRelayClientEvent, sendChanSize),
+		exit:       make(chan struct{}),
 	}
 }
 
@@ -197,7 +198,7 @@ func (r *RelayRelayStream) processAckReads() {
 
 		if err != nil {
 
-			log.Warn().Err(err).Msg("stream recv failed")
+			log.Warn().Err(err).Msg("RelayRelayStream.processAckReads: stream recv failed")
 
 			r.disconnect()
 
@@ -258,6 +259,7 @@ func (r *RelayRelayStream) processRelaySends() {
 			// the relay that gets our message will send our message id back.
 			_, _ = rpc.GetSetRelayMessageID(nextEvent.Event, func(id uint64) (uint64, error) {
 				return r.putAck(ClientAck{
+					ClientID:  nextEvent.Sender,
 					MessageID: id,
 				}), nil
 			})

@@ -12,13 +12,7 @@ import (
 
 func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, error) {
 
-	keypair, err := tcrypto.GenerateNoiseKeypair()
-
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := tcrypto.NewSenderHandshakeIN(keypair)
+	state, err := tcrypto.NewSenderHandshakeIN(conn.Identity)
 
 	if err != nil {
 		return nil, err
@@ -31,7 +25,7 @@ func GetAuthContext(conn *TsunagiConn, ctx context.Context) (context.Context, er
 	}
 
 	challenge, err := conn.Auth.GetChallenge(ctx, &rpc.AuthRequest{
-		PubKey:           keypair.Public,
+		PubKey:           conn.Identity.Public,
 		HandshakeInitMsg: msg,
 	})
 

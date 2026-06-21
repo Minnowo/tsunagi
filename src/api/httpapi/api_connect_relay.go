@@ -13,34 +13,48 @@ import (
 
 // wsRelayInEvent is the JSON shape for RelayEvents a relay pushes to us.
 type wsRelayInEvent struct {
-	PubKey     []byte `json:"pub_key"`
-	Type       string `json:"type"`        // "noise_handshake" | "message_payload"
-	State      []byte `json:"state"`       // noise_handshake
-	CipherText []byte `json:"cipher_text"` // message_payload
+	Type         string `json:"type"` // "noise_handshake" | "message_payload"
+	MessageID    uint64 `json:"message_id"`
+	DeliverToPub []byte `json:"deliver_to_pub_key"`
+	HandshakeMsg []byte `json:"handshake_msg"` // noise_handshake
+	CipherText   []byte `json:"cipher_text"`   // message_payload
+}
+
+// wsRelayAck is the JSON shape sent back to the relay after delivery.
+type wsRelayAck struct {
+	Type      string `json:"type"`
+	MessageID uint64 `json:"message_id"`
 }
 
 func (ev *wsRelayInEvent) toProto() *rpc.RelayEvent {
-
-	re := &rpc.RelayEvent{PubKey: ev.PubKey}
-
 	switch ev.Type {
 	case "noise_handshake":
-		re.Body = &rpc.RelayEvent_NoiseHandshake{
-			NoiseHandshake: &rpc.NoiseHandshake{State: ev.State},
+		return &rpc.RelayEvent{
+			Body: &rpc.RelayEvent_NoiseHandshake{
+				NoiseHandshake: &rpc.NoiseHandshake{
+					MessageID:       ev.MessageID,
+					DeliverToPubKey: ev.DeliverToPub,
+					HandshakeMsg:    ev.HandshakeMsg,
+				},
+			},
 		}
 	case "message_payload":
-		re.Body = &rpc.RelayEvent_MessagePayload{
-			MessagePayload: &rpc.MessagePayload{CipherText: ev.CipherText},
+		return &rpc.RelayEvent{
+			Body: &rpc.RelayEvent_MessagePayload{
+				MessagePayload: &rpc.MessagePayload{
+					MessageID:       ev.MessageID,
+					DeliverToPubKey: ev.DeliverToPub,
+					CipherText:      ev.CipherText,
+				},
+			},
 		}
 	}
-
-	return re
+	return &rpc.RelayEvent{}
 }
 
 func (h *HttpRelayApi) apiConnectRelay(w http.ResponseWriter, r *http.Request) {
 
 	pubkey, err := h.getAuthIdentity(r)
-
 	if err != nil {
 		api.Unauthorized(w)
 		return
@@ -51,12 +65,11 @@ func (h *HttpRelayApi) apiConnectRelay(w http.ResponseWriter, r *http.Request) {
 		api.Unauthorized(w)
 		return
 	}
-	log.Debug().Hex("deviceID", pubkey).Msg("relay connected")
+	log.Debug().Str("deviceID", id.String()).Msg("relay connected")
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
 	})
-
 	if err != nil {
 		log.Debug().Err(err).Msg("connect_relay: accept error")
 		return
@@ -73,14 +86,20 @@ func (h *HttpRelayApi) apiConnectRelay(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var ev wsRelayInEvent
-
 		if err := json.Unmarshal(raw, &ev); err != nil {
 			log.Debug().Err(err).Msg("connect_relay: unmarshal error")
 			continue
 		}
 
-		if err := h.DeliverMessage(ctx, ev.toProto()); err != nil {
+		msgID, err := h.DeliverMessage(ctx, ev.toProto())
+		if err != nil {
 			log.Error().Err(err).Msg("connect_relay: deliver error")
+		}
+
+		ack, _ := json.Marshal(wsRelayAck{Type: "relay_ack", MessageID: msgID})
+		if err := conn.Write(ctx, websocket.MessageText, ack); err != nil {
+			log.Debug().Err(err).Msg("connect_relay: ack write error")
+			return
 		}
 	}
 }

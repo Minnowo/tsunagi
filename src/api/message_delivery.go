@@ -23,7 +23,8 @@ func (this *TsunagiBase) DeliverMessage(ctx context.Context, req *rpc.RelayEvent
 		ok := this.ClientConns.PutRelayMsg(deviceID, req)
 
 		if ok {
-			log.Info().Str("device", deviceID.String()).Msg("message delivered to client")
+			log.Info().Uint64("id", v.MessagePayload.MessageID).Str("device", deviceID.String()).Msg("message delivered to client")
+
 			return v.MessagePayload.MessageID, nil
 		}
 
@@ -56,5 +57,6 @@ func (this *TsunagiBase) DeliverMessage(ctx context.Context, req *rpc.RelayEvent
 		// 	return this.DeliverNoiseHandshake(ctx, deviceID, v.RelayAck.HandshakeMsg)
 	}
 
+	panic("impossible")
 	return 0, nil
 }

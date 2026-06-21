@@ -302,7 +302,7 @@ function wsConnect() {
     try { parsed = JSON.parse(e.data); } catch (_) {}
 
     if (parsed && parsed.type === 'noise_handshake') {
-      wsLog('< noise_handshake (' + (parsed.state ? b64ToU8(parsed.state).length : '?') + ' bytes)', 'info');
+      wsLog('< noise_handshake (' + (parsed.handshake_msg ? b64ToU8(parsed.handshake_msg).length : '?') + ' bytes)', 'info');
       xkOnMessage(parsed);
     } else if (parsed && parsed.type === 'message_payload' && document.getElementById('ws-e2ee').checked) {
       const cipherBytes = b64ToU8(parsed.cipher_text);
@@ -348,10 +348,10 @@ function wsSendMessage() {
   }
 
   const ok = wsSend({
-    pub_key:     destPubB64,
-    relay_addr:  relayAddr,
-    type:        'message_payload',
-    cipher_text: u8ToB64(payloadBytes),
+    relay_addr:        relayAddr,
+    type:              'message_payload',
+    deliver_to_pub_key: destPubB64,
+    cipher_text:       u8ToB64(payloadBytes),
   });
   if (ok) {
     wsLog('> message_payload' + (e2ee ? ' [E2EE]' : '') + ' to ' + destPubB64.slice(0, 12) + '...');
@@ -407,10 +407,10 @@ function xkSendHandshake(stateBytes) {
   const relayAddr   = document.getElementById('xk-relay-addr').value;
   if (!peerPubB64) { xkLog('peer pub key required', 'err'); return false; }
   return wsSend({
-    pub_key:    peerPubB64,
-    relay_addr: relayAddr,
-    type:       'noise_handshake',
-    state:      u8ToB64(stateBytes),
+    relay_addr:         relayAddr,
+    type:               'noise_handshake',
+    deliver_to_pub_key: peerPubB64,
+    handshake_msg:      u8ToB64(stateBytes),
   });
 }
 
@@ -459,7 +459,7 @@ function xkOnMessage(ev) {
   if (!wasmLoaded) return;
   if (!xk.role) { xkLog('received noise_handshake but no role set - ignoring', 'err'); return; }
 
-  const stateBytes = b64ToU8(ev.state);
+  const stateBytes = b64ToU8(ev.handshake_msg);
 
   if (xk.role === 'responder') {
     xkOnMessageResponder(stateBytes);

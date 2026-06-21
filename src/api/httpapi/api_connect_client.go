@@ -14,55 +14,68 @@ import (
 
 // wsClientEvent is the JSON shape for messages the client sends over the WebSocket.
 type wsClientEvent struct {
-	PubKey     []byte `json:"pub_key"`
-	RelayAddr  string `json:"relay_addr"`
-	Type       string `json:"type"`        // "noise_handshake" | "message_payload"
-	State      []byte `json:"state"`       // noise_handshake
-	CipherText []byte `json:"cipher_text"` // message_payload
+	RelayAddr    string `json:"relay_addr"`
+	Type         string `json:"type"` // "noise_handshake" | "message_payload"
+	MessageID    uint64 `json:"message_id"`
+	DeliverToPub []byte `json:"deliver_to_pub_key"`
+	HandshakeMsg []byte `json:"handshake_msg"` // noise_handshake
+	CipherText   []byte `json:"cipher_text"`   // message_payload
 }
 
 // wsRelayEvent is the JSON shape for messages the server sends to the client.
 type wsRelayEvent struct {
-	PubKey     []byte `json:"pub_key"`
-	Type       string `json:"type"`
-	State      []byte `json:"state"`
-	CipherText []byte `json:"cipher_text"`
+	Type         string `json:"type"`
+	MessageID    uint64 `json:"message_id"`
+	DeliverToPub []byte `json:"deliver_to_pub_key,omitempty"`
+	HandshakeMsg []byte `json:"handshake_msg,omitempty"`
+	CipherText   []byte `json:"cipher_text,omitempty"`
 }
 
 func relayEventToWS(ev *rpc.RelayEvent) wsRelayEvent {
-
-	out := wsRelayEvent{PubKey: ev.PubKey}
-
 	switch v := ev.Body.(type) {
 	case *rpc.RelayEvent_NoiseHandshake:
-		out.Type = "noise_handshake"
-		out.State = v.NoiseHandshake.State
+		return wsRelayEvent{
+			Type:         "noise_handshake",
+			MessageID:    v.NoiseHandshake.MessageID,
+			DeliverToPub: v.NoiseHandshake.DeliverToPubKey,
+			HandshakeMsg: v.NoiseHandshake.HandshakeMsg,
+		}
 	case *rpc.RelayEvent_MessagePayload:
-		out.Type = "message_payload"
-		out.CipherText = v.MessagePayload.CipherText
+		return wsRelayEvent{
+			Type:         "message_payload",
+			MessageID:    v.MessagePayload.MessageID,
+			DeliverToPub: v.MessagePayload.DeliverToPubKey,
+			CipherText:   v.MessagePayload.CipherText,
+		}
+	case *rpc.RelayEvent_RelayAck:
+		return wsRelayEvent{
+			Type:      "relay_ack",
+			MessageID: v.RelayAck.MessageID,
+		}
 	}
-
-	return out
+	return wsRelayEvent{}
 }
 
 func (ev *wsClientEvent) toProto() *rpc.ClientEvent {
-
-	ce := &rpc.ClientEvent{
-		PubKey:    ev.PubKey,
-		RelayAddr: ev.RelayAddr,
-	}
-
+	ce := &rpc.ClientEvent{RelayAddr: ev.RelayAddr}
 	switch ev.Type {
 	case "noise_handshake":
 		ce.Body = &rpc.ClientEvent_NoiseHandshake{
-			NoiseHandshake: &rpc.NoiseHandshake{State: ev.State},
+			NoiseHandshake: &rpc.NoiseHandshake{
+				MessageID:       ev.MessageID,
+				DeliverToPubKey: ev.DeliverToPub,
+				HandshakeMsg:    ev.HandshakeMsg,
+			},
 		}
 	case "message_payload":
 		ce.Body = &rpc.ClientEvent_MessagePayload{
-			MessagePayload: &rpc.MessagePayload{CipherText: ev.CipherText},
+			MessagePayload: &rpc.MessagePayload{
+				MessageID:       ev.MessageID,
+				DeliverToPubKey: ev.DeliverToPub,
+				CipherText:      ev.CipherText,
+			},
 		}
 	}
-
 	return ce
 }
 
@@ -94,8 +107,9 @@ func (h *HttpRelayApi) apiConnectClient(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 
 	ch := api.ClientConn{
-		SendCh: make(chan *rpc.RelayEvent, 16),
-		Ctx:    ctx,
+		ClientID: id,
+		SendCh:   make(chan *rpc.RelayEvent, 16),
+		Ctx:      ctx,
 	}
 
 	if !h.ClientConns.AddConn(id, &ch) {
@@ -137,15 +151,12 @@ func (h *HttpRelayApi) apiConnectClient(w http.ResponseWriter, r *http.Request) 
 		}
 
 		var ev wsClientEvent
-
 		if err := json.Unmarshal(raw, &ev); err != nil {
 			log.Debug().Err(err).Msg("connect_client: unmarshal error")
 			continue
 		}
 
-		log.Info().Interface("msg", ev).Msg("got msg")
-
-		if err := h.ForwardMessage(ctx, ev.toProto()); err != nil {
+		if err := h.ForwardMessage(&ch, ev.toProto()); err != nil {
 			log.Error().Err(err).Msg("connect_client: forward error")
 		}
 	}

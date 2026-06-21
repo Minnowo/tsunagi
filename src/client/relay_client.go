@@ -5,6 +5,8 @@ import (
 	"sync"
 	"tsunagi/src/data"
 	"tsunagi/src/rpc"
+
+	"github.com/flynn/noise"
 )
 
 var (
@@ -23,14 +25,16 @@ type RelayRelayClient struct {
 	clients      map[string]_ConnRelayStream
 	sendChanSize int
 	ackChan      chan ClientAck
+	identity     noise.DHKey
 }
 
-func NewRelayRelayClient(sendChanSize int, ackChanSize int) *RelayRelayClient {
+func NewRelayRelayClient(identity noise.DHKey, sendChanSize int, ackChanSize int) *RelayRelayClient {
 
 	return &RelayRelayClient{
 		clients:      map[string]_ConnRelayStream{},
 		sendChanSize: sendChanSize,
 		ackChan:      make(chan ClientAck, ackChanSize),
+		identity:     identity,
 	}
 }
 
@@ -45,7 +49,7 @@ func (c *RelayRelayClient) getStream(addr string) (*RelayRelayStream, error) {
 
 	if !ok {
 
-		conn := NewTsunagiConn(addr)
+		conn := NewTsunagiConn(addr, c.identity)
 
 		if err := conn.Connect(); err != nil {
 			return nil, err

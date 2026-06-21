@@ -176,7 +176,7 @@ func (r *ClientRelayStream) processReads() {
 
 		if err != nil {
 
-			log.Warn().Err(err).Msg("stream recv failed")
+			log.Warn().Err(err).Msg("ClientRelayStream.processSend: stream recv failed")
 
 			r.disconnect()
 

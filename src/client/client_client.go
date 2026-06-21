@@ -3,6 +3,8 @@ package client
 import (
 	"sync"
 	"tsunagi/src/rpc"
+
+	"github.com/flynn/noise"
 )
 
 type _ConnClientStream struct {
@@ -15,13 +17,15 @@ type ClientRelayClient struct {
 	clients      map[string]_ConnClientStream
 	respChanPool sync.Pool
 	sendChanSize int
+	identity     noise.DHKey
 }
 
-func NewClientRelayClient(sendChanSize int) *ClientRelayClient {
+func NewClientRelayClient(identity noise.DHKey, sendChanSize int) *ClientRelayClient {
 
 	return &ClientRelayClient{
 		clients:      map[string]_ConnClientStream{},
 		sendChanSize: sendChanSize,
+		identity:     identity,
 	}
 }
 
@@ -36,7 +40,7 @@ func (c *ClientRelayClient) getStream(addr string) (*ClientRelayStream, error) {
 
 	if !ok {
 
-		conn := NewTsunagiConn(addr)
+		conn := NewTsunagiConn(addr, c.identity)
 
 		if err := conn.Connect(); err != nil {
 			return nil, err
