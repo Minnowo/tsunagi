@@ -18,7 +18,7 @@ type ClientRelayClient struct {
 	respChanPool sync.Pool
 	sendChanSize int
 	identity     noise.DHKey
-	AutoMsgID bool
+	AutoMsgID    bool
 	autoMsgCount uint64
 }
 
@@ -83,9 +83,9 @@ func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 		return err
 	}
 
-	if c.AutoMsgID{
+	if c.AutoMsgID {
 		// not perfect but good enough for debugging
-		rpc.GetSetClientMessageID(event, func(id uint64) (uint64, error){
+		rpc.GetSetClientMessageID(event, func(id uint64) (uint64, error) {
 			c.autoMsgCount++
 			return c.autoMsgCount, nil
 		})

@@ -121,9 +121,9 @@ func (f *addForm) focusField(i int) {
 }
 
 func (f addForm) submit() (Friend, string) {
-	name   := strings.TrimSpace(f.inputs[formName].Value())
+	name := strings.TrimSpace(f.inputs[formName].Value())
 	pubkey := strings.TrimSpace(f.inputs[formPubKey].Value())
-	relay  := strings.TrimSpace(f.inputs[formRelay].Value())
+	relay := strings.TrimSpace(f.inputs[formRelay].Value())
 	switch {
 	case name == "":
 		return Friend{}, "name is required"
@@ -278,10 +278,10 @@ type tuiModel struct {
 	height     int
 
 	// profile picker
-	profileList    list.Model
-	allProfiles    []*Profile
+	profileList     list.Model
+	allProfiles     []*Profile
 	newProfileInput textinput.Model
-	newProfileErr  string
+	newProfileErr   string
 
 	// active session (set when a profile is selected)
 	profile     *Profile
@@ -568,7 +568,7 @@ func (m tuiModel) activateProfile(p *Profile) (tuiModel, tea.Cmd) {
 	m.profile = p
 	m.pubKeyB64 = p.PubKey
 	m.relayClient = client.NewClientRelayClient(identity, 0)
-	m.relayClient.AutoMsgID=true
+	m.relayClient.AutoMsgID = true
 	m.friends = newFriendListModel(p.Friends, m.height-6)
 	m.view = viewFriends
 	m.chat = nil
@@ -705,10 +705,10 @@ func (m tuiModel) viewProfiles() string {
 		detail = styleMuted.Render("no profiles yet\n\npress n to create one")
 	}
 
-	leftPanel  := stylePanelBorder.Width(listW).Height(panelH).Render(m.profileList.View())
+	leftPanel := stylePanelBorder.Width(listW).Height(panelH).Render(m.profileList.View())
 	rightPanel := stylePanelBorder.Width(rightW).Height(panelH).Render(detail)
-	top        := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
-	help       := styleHelp.Render("↑/↓ navigate · enter select · n new profile · q quit")
+	top := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
+	help := styleHelp.Render("↑/↓ navigate · enter select · n new profile · q quit")
 	return lipgloss.JoinVertical(lipgloss.Left, top, help)
 }
 
@@ -727,7 +727,7 @@ func (m tuiModel) viewNewProfile() string {
 		panelW = m.width - 4
 	}
 	panel := stylePanelBorder.Width(panelW).Render(b.String())
-	help  := styleHelp.Render("enter create · esc back")
+	help := styleHelp.Render("enter create · esc back")
 	return lipgloss.JoinVertical(lipgloss.Left, panel, help)
 }
 
@@ -760,9 +760,9 @@ func (m tuiModel) viewFriends() string {
 		detail = styleMuted.Render("select a friend")
 	}
 	profileLine := styleHelp.Render(fmt.Sprintf("profile: %s", m.profile.Name))
-	rightPanel  := stylePanelBorder.Width(rightW).Height(panelH).Render(profileLine + "\n\n" + detail)
+	rightPanel := stylePanelBorder.Width(rightW).Height(panelH).Render(profileLine + "\n\n" + detail)
 
-	top  := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
+	top := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
 	help := styleHelp.Render("↑/↓ navigate · enter open chat · a add friend · q switch profile")
 	return lipgloss.JoinVertical(lipgloss.Left, top, help)
 }
@@ -787,7 +787,7 @@ func (m tuiModel) viewAddForm() string {
 		panelW = 72
 	}
 	panel := stylePanelBorder.Width(panelW).Render(b.String())
-	help  := styleHelp.Render("tab/↑↓ move · enter next/submit · esc back")
+	help := styleHelp.Render("tab/↑↓ move · enter next/submit · esc back")
 	return lipgloss.JoinVertical(lipgloss.Left, panel, help)
 }
 
@@ -808,13 +808,13 @@ func (m tuiModel) viewChat() string {
 	}
 	chatTitle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("250")).
 		Render("Chat · " + m.chat.friend.Name)
-	vpView   := m.chat.vp.View()
+	vpView := m.chat.vp.View()
 	inputBox := stylePanelBorder.Width(rightW - 2).Render(m.chat.input.View())
 
 	rightContent := lipgloss.JoinVertical(lipgloss.Left, chatTitle, vpView, inputBox)
-	rightPanel   := stylePanelBorder.Width(rightW).Height(panelH).Render(rightContent)
+	rightPanel := stylePanelBorder.Width(rightW).Height(panelH).Render(rightContent)
 
-	top  := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
+	top := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, "  ", rightPanel)
 	help := styleHelp.Render("enter send · esc friends · q switch profile · ctrl+c quit")
 	return lipgloss.JoinVertical(lipgloss.Left, top, help)
 }

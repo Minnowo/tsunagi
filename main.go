@@ -74,9 +74,9 @@ func main() {
 						Action: cmd.CmdClientConnect,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "addr",
-								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
-								Value:    "localhost:7471",
+								Name:  "addr",
+								Usage: "The remote address (e.g. tcp://localhost:7471/)",
+								Value: "localhost:7471",
 							},
 						},
 					},
@@ -93,9 +93,9 @@ func main() {
 						Action: cmd.CmdRelayConnect,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "addr",
-								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
-								Value:    "localhost:7471",
+								Name:  "addr",
+								Usage: "The remote address (e.g. tcp://localhost:7471/)",
+								Value: "localhost:7471",
 							},
 						},
 					},
@@ -112,9 +112,9 @@ func main() {
 						Action: cmd.CmdTuiClient,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "addr",
-								Usage:    "The remote address (e.g. localhost:7470)",
-								Value:    "localhost:7471",
+								Name:  "addr",
+								Usage: "The remote address (e.g. localhost:7470)",
+								Value: "localhost:7471",
 							},
 						},
 					},
