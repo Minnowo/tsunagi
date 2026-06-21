@@ -6,6 +6,35 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func GetSetClientMessageID(evt *ClientEvent, getSetFunc func(id uint64) (uint64, error)) (uint64, error) {
+
+	switch v := evt.Body.(type) {
+	case *ClientEvent_MessagePayload:
+
+		id, err := getSetFunc(v.MessagePayload.MessageID)
+
+		if err == nil {
+			v.MessagePayload.MessageID = id
+		}
+
+		return v.MessagePayload.MessageID, err
+
+	case *ClientEvent_NoiseHandshake:
+
+		id, err := getSetFunc(v.NoiseHandshake.MessageID)
+
+		if err == nil {
+			v.NoiseHandshake.MessageID = id
+		}
+
+		return v.NoiseHandshake.MessageID, err
+
+	}
+
+	log.Panic().Str("type", fmt.Sprintf("%T", evt.Body)).Msg("unknown event type")
+
+	return 0, nil
+}
 func GetSetRelayMessageID(evt *RelayEvent, getSetFunc func(id uint64) (uint64, error)) (uint64, error) {
 
 	switch v := evt.Body.(type) {

@@ -76,13 +76,7 @@ func main() {
 							&cli.StringFlag{
 								Name:     "addr",
 								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
-								Required: true,
-							},
-							&cli.StringFlag{
-								Name:     "device",
-								Usage:    "The target device ID",
-								Value:    "0000000000000000000000000000000000000000000",
-								Required: false,
+								Value:    "localhost:7471",
 							},
 						},
 					},
@@ -101,13 +95,26 @@ func main() {
 							&cli.StringFlag{
 								Name:     "addr",
 								Usage:    "The remote address (e.g. tcp://localhost:7471/)",
-								Required: true,
+								Value:    "localhost:7471",
 							},
+						},
+					},
+				},
+			},
+			{
+				Name:        "tui",
+				Usage:       "Terminal UI client",
+				Description: "",
+				Commands: []*cli.Command{
+					{
+						Name:   "client",
+						Usage:  "Launch the TUI client",
+						Action: cmd.CmdTuiClient,
+						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "device",
-								Usage:    "The target device ID",
-								Value:    "0000000000000000000000000000000000000000000",
-								Required: false,
+								Name:     "addr",
+								Usage:    "The remote address (e.g. localhost:7470)",
+								Value:    "localhost:7471",
 							},
 						},
 					},
