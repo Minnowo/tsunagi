@@ -3,8 +3,10 @@ package client
 import (
 	"context"
 	"sync"
+	"time"
 	"tsunagi/src/rpc"
 
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
@@ -25,7 +27,7 @@ type ClientRelayStream struct {
 
 	// send events recieved on this channel are sent through RPC.
 	// This is never to be closed.
-	send chan SendEventRequest
+	send chan *rpc.ClientEvent
 
 	// read events recieved on rpc are sent through this channel
 	// This is never to be closed.
@@ -40,13 +42,13 @@ func NewClientRelayStream(conn *TsunagiConn, sendChanSize int) *ClientRelayStrea
 		conn:     conn,
 		didStart: false,
 		didExit:  false,
-		send:     make(chan SendEventRequest, sendChanSize),
+		send:     make(chan *rpc.ClientEvent, sendChanSize),
 		read:     make(chan *rpc.RelayEvent),
 		exit:     make(chan struct{}),
 	}
 }
 
-func (r *ClientRelayStream) SendChan() chan<- SendEventRequest {
+func (r *ClientRelayStream) SendChan() chan<- *rpc.ClientEvent {
 	return r.send
 }
 
@@ -84,7 +86,7 @@ func (r *ClientRelayStream) Start() {
 			r.didExit = true
 			r.Close() // if a panic happens we need to close this
 		}()
-		processSends(r.exit, r.send, r)
+		r.processSends()
 	}()
 
 	go func() {
@@ -92,7 +94,7 @@ func (r *ClientRelayStream) Start() {
 			r.didExit = true
 			r.Close() // if a panic happens we need to close this
 		}()
-		processReads(r)
+		r.processReads()
 	}()
 }
 
@@ -104,15 +106,8 @@ func (r *ClientRelayStream) IsConnected() bool {
 	return r.stream != nil
 }
 
-func (r *ClientRelayStream) rpcSend(req any) error {
-
-	reqq, ok := req.(*rpc.ClientEvent)
-
-	if !ok {
-		return ErrInvalidSendType
-	}
-
-	return r.stream.Send(reqq)
+func (r *ClientRelayStream) rpcSend(req *rpc.ClientEvent) error {
+	return r.stream.Send(req)
 }
 
 func (r *ClientRelayStream) disconnect() {
@@ -152,4 +147,93 @@ func (r *ClientRelayStream) connect(ctx context.Context) error {
 	r.stream = stream
 
 	return nil
+}
+
+func (r *ClientRelayStream) processReads() {
+
+	for {
+
+		select {
+		case <-r.exit:
+			return
+		default:
+			break
+		}
+
+		if !r.IsConnected() {
+
+			if err := r.connect(context.Background()); err != nil {
+
+				log.Warn().Err(err).Msg("failed to connect, retrying in 1s")
+
+				time.Sleep(time.Second)
+
+				continue
+			}
+		}
+
+		event, err := r.stream.Recv()
+
+		if err != nil {
+
+			log.Warn().Err(err).Msg("stream recv failed")
+
+			r.disconnect()
+
+			continue
+		}
+
+		r.read <- event
+	}
+}
+
+func (r *ClientRelayStream) processSends() {
+
+	var req *rpc.ClientEvent
+	for {
+		select {
+		case <-r.exit:
+			r.disconnect()
+			return
+		default:
+			break
+		}
+
+		if !r.IsConnected() {
+
+			if err := r.connect(context.Background()); err != nil {
+
+				log.Warn().Err(err).Msg("failed to connect, retrying in 1s")
+				time.Sleep(time.Second)
+
+				continue
+			}
+		}
+
+		if req != nil {
+
+			if err := r.rpcSend(req); err != nil {
+
+				log.Warn().Err(err).Msg("stream send failed, reconnecting")
+
+				r.disconnect()
+				time.Sleep(time.Second)
+
+				continue
+			} else {
+				req = nil
+			}
+		}
+
+		select {
+		case nextEvent, ok := <-r.send:
+
+			if !ok {
+				log.Debug().Msg("send channel closed")
+				return
+			}
+
+			req = nextEvent
+		}
+	}
 }

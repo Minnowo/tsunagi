@@ -25,10 +25,6 @@ func NewClientRelayClient(sendChanSize int) *ClientRelayClient {
 	}
 }
 
-func (c *ClientRelayClient) getRespChan() chan error {
-	return make(chan error, 1)
-}
-
 func (c *ClientRelayClient) getStream(addr string) (*ClientRelayStream, error) {
 
 	client, ok := func() (_ConnClientStream, bool) {
@@ -81,52 +77,13 @@ func (c *ClientRelayClient) Send(addr string, event *rpc.ClientEvent) error {
 		return err
 	}
 
-	resp := c.getRespChan()
-
-	req := SendEventRequest{
-		resp:  resp,
-		event: event,
-	}
-
 	select {
 	case <-stream.exit:
 		return ErrStreamClosed
-	case stream.send <- req:
-		break
-	}
-
-	select {
-	case <-stream.exit:
-		select {
-		case err := <-resp:
-			return err
-		default:
-			return ErrStreamClosed
-		}
-	case err := <-resp:
-		return err
+	case stream.send <- event:
+		return nil
 	}
 }
-
-// func (c *ClientRelayClient) ForwardMsg(addr string, device []byte, event *rpc.MessagePayload) error {
-// 	return c.Send(addr, &rpc.ClientEvent{
-// 		DeviceID:  device,
-// 		RelayAddr: addr,
-// 		Body: &rpc.ClientEvent_MessagePayload{
-// 			MessagePayload: event,
-// 		},
-// 	})
-// }
-
-// func (c *ClientRelayClient) HandshakeMsg(addr string, device []byte, event *rpc.NoiseHandshake) error {
-// 	return c.Send(addr, &rpc.ClientEvent{
-// 		DeviceID:  device,
-// 		RelayAddr: addr,
-// 		Body: &rpc.ClientEvent_NoiseHandshake{
-// 			NoiseHandshake: event,
-// 		},
-// 	})
-// }
 
 func (c *ClientRelayClient) GetReadHandle(addr string) (<-chan *rpc.RelayEvent, <-chan struct{}, error) {
 

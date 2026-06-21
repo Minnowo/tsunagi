@@ -41,7 +41,7 @@ service Tsunagi {
 
   // ConnectRelay is for a relay to connect to another relay.
   // This should be used for relay message passing, since a relay never needs to recieve events.
-  rpc ConnectRelay(stream RelayEvent) returns (Empty) {}
+  rpc ConnectRelay(stream RelayEvent) returns (stream RelayAck) {}
 
   // ConnectClient is for a client to connect with a relay.
   // This should be used when the connecting client wants to also recieve events from the server.
@@ -52,29 +52,36 @@ service Tsunagi {
 message Empty {}
 
 message ClientEvent {
-  bytes  PubKey     = 1;
-  string RelayAddr  = 2;
-  oneof Body {
-    NoiseHandshake  NoiseHandshake = 3;
-    MessagePayload  MessagePayload = 4;
-  }
-}
-
-message RelayEvent {
-  bytes PubKey   = 1;
+  string RelayAddr  = 1;
   oneof Body {
     NoiseHandshake  NoiseHandshake = 2;
     MessagePayload  MessagePayload = 3;
   }
 }
 
+message RelayEvent {
+  oneof Body {
+    NoiseHandshake  NoiseHandshake = 1;
+    MessagePayload  MessagePayload = 2;
+    RelayAck        RelayAck       = 3;
+  }
+}
+
+message RelayAck {
+  uint64 MessageID   = 1;
+}
+
 // noise message to continue handshake with a client
 message NoiseHandshake {
-  bytes State = 1;
+  uint64 MessageID        = 1;
+  bytes  DeliverToPubKey  = 2;
+  bytes  HandshakeMsg     = 3;
 }
 
 // encrypted message data for the recieving client
 message MessagePayload {
-  bytes CipherText = 1;
+  uint64 MessageID        = 1;
+  bytes  DeliverToPubKey  = 2;
+  bytes  CipherText       = 3;
 }
 

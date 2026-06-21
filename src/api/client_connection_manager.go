@@ -26,8 +26,9 @@ func NewClientConnManager() *ClientConnManager {
 }
 
 type ClientConn struct {
-	SendCh chan *rpc.RelayEvent
-	Ctx    context.Context
+	ClientID data.Identifier
+	SendCh   chan *rpc.RelayEvent
+	Ctx      context.Context
 }
 
 func (this *ClientConnManager) readConn(id data.Identifier) (*ClientConn, bool) {

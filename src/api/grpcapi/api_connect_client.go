@@ -44,8 +44,9 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 	ctx, cancel := context.WithCancel(stream.Context())
 
 	conn := api.ClientConn{
-		SendCh: make(chan *rpc.RelayEvent),
-		Ctx:    ctx,
+		ClientID: id,
+		SendCh:   make(chan *rpc.RelayEvent),
+		Ctx:      ctx,
 	}
 
 	if !this.ClientConns.AddConn(id, &conn) {
@@ -92,7 +93,7 @@ func (this *RelayApi) ConnectClient(stream grpc.BidiStreamingServer[rpc.ClientEv
 			return err
 		}
 
-		err = this.ForwardMessage(stream.Context(), event)
+		err = this.ForwardMessage(&conn, event)
 
 		if err != nil {
 			log.Error().Err(err).Msg("error forwarding message")

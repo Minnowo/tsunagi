@@ -259,8 +259,7 @@ func (*Empty) Descriptor() ([]byte, []int) {
 
 type ClientEvent struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
-	PubKey    []byte                 `protobuf:"bytes,1,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
-	RelayAddr string                 `protobuf:"bytes,2,opt,name=RelayAddr,proto3" json:"RelayAddr,omitempty"`
+	RelayAddr string                 `protobuf:"bytes,1,opt,name=RelayAddr,proto3" json:"RelayAddr,omitempty"`
 	// Types that are valid to be assigned to Body:
 	//
 	//	*ClientEvent_NoiseHandshake
@@ -300,13 +299,6 @@ func (*ClientEvent) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ClientEvent) GetPubKey() []byte {
-	if x != nil {
-		return x.PubKey
-	}
-	return nil
-}
-
 func (x *ClientEvent) GetRelayAddr() string {
 	if x != nil {
 		return x.RelayAddr
@@ -344,11 +336,11 @@ type isClientEvent_Body interface {
 }
 
 type ClientEvent_NoiseHandshake struct {
-	NoiseHandshake *NoiseHandshake `protobuf:"bytes,3,opt,name=NoiseHandshake,proto3,oneof"`
+	NoiseHandshake *NoiseHandshake `protobuf:"bytes,2,opt,name=NoiseHandshake,proto3,oneof"`
 }
 
 type ClientEvent_MessagePayload struct {
-	MessagePayload *MessagePayload `protobuf:"bytes,4,opt,name=MessagePayload,proto3,oneof"`
+	MessagePayload *MessagePayload `protobuf:"bytes,3,opt,name=MessagePayload,proto3,oneof"`
 }
 
 func (*ClientEvent_NoiseHandshake) isClientEvent_Body() {}
@@ -356,12 +348,12 @@ func (*ClientEvent_NoiseHandshake) isClientEvent_Body() {}
 func (*ClientEvent_MessagePayload) isClientEvent_Body() {}
 
 type RelayEvent struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	PubKey []byte                 `protobuf:"bytes,1,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Body:
 	//
 	//	*RelayEvent_NoiseHandshake
 	//	*RelayEvent_MessagePayload
+	//	*RelayEvent_RelayAck
 	Body          isRelayEvent_Body `protobuf_oneof:"Body"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -397,13 +389,6 @@ func (*RelayEvent) Descriptor() ([]byte, []int) {
 	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *RelayEvent) GetPubKey() []byte {
-	if x != nil {
-		return x.PubKey
-	}
-	return nil
-}
-
 func (x *RelayEvent) GetBody() isRelayEvent_Body {
 	if x != nil {
 		return x.Body
@@ -429,33 +414,94 @@ func (x *RelayEvent) GetMessagePayload() *MessagePayload {
 	return nil
 }
 
+func (x *RelayEvent) GetRelayAck() *RelayAck {
+	if x != nil {
+		if x, ok := x.Body.(*RelayEvent_RelayAck); ok {
+			return x.RelayAck
+		}
+	}
+	return nil
+}
+
 type isRelayEvent_Body interface {
 	isRelayEvent_Body()
 }
 
 type RelayEvent_NoiseHandshake struct {
-	NoiseHandshake *NoiseHandshake `protobuf:"bytes,2,opt,name=NoiseHandshake,proto3,oneof"`
+	NoiseHandshake *NoiseHandshake `protobuf:"bytes,1,opt,name=NoiseHandshake,proto3,oneof"`
 }
 
 type RelayEvent_MessagePayload struct {
-	MessagePayload *MessagePayload `protobuf:"bytes,3,opt,name=MessagePayload,proto3,oneof"`
+	MessagePayload *MessagePayload `protobuf:"bytes,2,opt,name=MessagePayload,proto3,oneof"`
+}
+
+type RelayEvent_RelayAck struct {
+	RelayAck *RelayAck `protobuf:"bytes,3,opt,name=RelayAck,proto3,oneof"`
 }
 
 func (*RelayEvent_NoiseHandshake) isRelayEvent_Body() {}
 
 func (*RelayEvent_MessagePayload) isRelayEvent_Body() {}
 
-// noise message to continue handshake with a client
-type NoiseHandshake struct {
+func (*RelayEvent_RelayAck) isRelayEvent_Body() {}
+
+type RelayAck struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	State         []byte                 `protobuf:"bytes,1,opt,name=State,proto3" json:"State,omitempty"`
+	MessageID     uint64                 `protobuf:"varint,1,opt,name=MessageID,proto3" json:"MessageID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *RelayAck) Reset() {
+	*x = RelayAck{}
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RelayAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RelayAck) ProtoMessage() {}
+
+func (x *RelayAck) ProtoReflect() protoreflect.Message {
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RelayAck.ProtoReflect.Descriptor instead.
+func (*RelayAck) Descriptor() ([]byte, []int) {
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RelayAck) GetMessageID() uint64 {
+	if x != nil {
+		return x.MessageID
+	}
+	return 0
+}
+
+// noise message to continue handshake with a client
+type NoiseHandshake struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	MessageID       uint64                 `protobuf:"varint,1,opt,name=MessageID,proto3" json:"MessageID,omitempty"`
+	DeliverToPubKey []byte                 `protobuf:"bytes,2,opt,name=DeliverToPubKey,proto3" json:"DeliverToPubKey,omitempty"`
+	HandshakeMsg    []byte                 `protobuf:"bytes,3,opt,name=HandshakeMsg,proto3" json:"HandshakeMsg,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
 func (x *NoiseHandshake) Reset() {
 	*x = NoiseHandshake{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -467,7 +513,7 @@ func (x *NoiseHandshake) String() string {
 func (*NoiseHandshake) ProtoMessage() {}
 
 func (x *NoiseHandshake) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[7]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -480,27 +526,43 @@ func (x *NoiseHandshake) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NoiseHandshake.ProtoReflect.Descriptor instead.
 func (*NoiseHandshake) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{7}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *NoiseHandshake) GetState() []byte {
+func (x *NoiseHandshake) GetMessageID() uint64 {
 	if x != nil {
-		return x.State
+		return x.MessageID
+	}
+	return 0
+}
+
+func (x *NoiseHandshake) GetDeliverToPubKey() []byte {
+	if x != nil {
+		return x.DeliverToPubKey
+	}
+	return nil
+}
+
+func (x *NoiseHandshake) GetHandshakeMsg() []byte {
+	if x != nil {
+		return x.HandshakeMsg
 	}
 	return nil
 }
 
 // encrypted message data for the recieving client
 type MessagePayload struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CipherText    []byte                 `protobuf:"bytes,1,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	MessageID       uint64                 `protobuf:"varint,1,opt,name=MessageID,proto3" json:"MessageID,omitempty"`
+	DeliverToPubKey []byte                 `protobuf:"bytes,2,opt,name=DeliverToPubKey,proto3" json:"DeliverToPubKey,omitempty"`
+	CipherText      []byte                 `protobuf:"bytes,3,opt,name=CipherText,proto3" json:"CipherText,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *MessagePayload) Reset() {
 	*x = MessagePayload{}
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[8]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -512,7 +574,7 @@ func (x *MessagePayload) String() string {
 func (*MessagePayload) ProtoMessage() {}
 
 func (x *MessagePayload) ProtoReflect() protoreflect.Message {
-	mi := &file_src_rpc_tsunagi_proto_msgTypes[8]
+	mi := &file_src_rpc_tsunagi_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -525,7 +587,21 @@ func (x *MessagePayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessagePayload.ProtoReflect.Descriptor instead.
 func (*MessagePayload) Descriptor() ([]byte, []int) {
-	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{8}
+	return file_src_rpc_tsunagi_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MessagePayload) GetMessageID() uint64 {
+	if x != nil {
+		return x.MessageID
+	}
+	return 0
+}
+
+func (x *MessagePayload) GetDeliverToPubKey() []byte {
+	if x != nil {
+		return x.DeliverToPubKey
+	}
+	return nil
 }
 
 func (x *MessagePayload) GetCipherText() []byte {
@@ -550,31 +626,35 @@ const file_src_rpc_tsunagi_proto_rawDesc = "" +
 	"\tSignature\x18\x01 \x01(\fR\tSignature\"!\n" +
 	"\tAuthToken\x12\x14\n" +
 	"\x05Token\x18\x01 \x01(\fR\x05Token\"\a\n" +
-	"\x05Empty\"\xc9\x01\n" +
-	"\vClientEvent\x12\x16\n" +
-	"\x06PubKey\x18\x01 \x01(\fR\x06PubKey\x12\x1c\n" +
-	"\tRelayAddr\x18\x02 \x01(\tR\tRelayAddr\x12=\n" +
-	"\x0eNoiseHandshake\x18\x03 \x01(\v2\x13.rpc.NoiseHandshakeH\x00R\x0eNoiseHandshake\x12=\n" +
-	"\x0eMessagePayload\x18\x04 \x01(\v2\x13.rpc.MessagePayloadH\x00R\x0eMessagePayloadB\x06\n" +
-	"\x04Body\"\xaa\x01\n" +
-	"\n" +
-	"RelayEvent\x12\x16\n" +
-	"\x06PubKey\x18\x01 \x01(\fR\x06PubKey\x12=\n" +
+	"\x05Empty\"\xb1\x01\n" +
+	"\vClientEvent\x12\x1c\n" +
+	"\tRelayAddr\x18\x01 \x01(\tR\tRelayAddr\x12=\n" +
 	"\x0eNoiseHandshake\x18\x02 \x01(\v2\x13.rpc.NoiseHandshakeH\x00R\x0eNoiseHandshake\x12=\n" +
 	"\x0eMessagePayload\x18\x03 \x01(\v2\x13.rpc.MessagePayloadH\x00R\x0eMessagePayloadB\x06\n" +
-	"\x04Body\"&\n" +
-	"\x0eNoiseHandshake\x12\x14\n" +
-	"\x05State\x18\x01 \x01(\fR\x05State\"0\n" +
-	"\x0eMessagePayload\x12\x1e\n" +
+	"\x04Body\"\xbf\x01\n" +
 	"\n" +
-	"CipherText\x18\x01 \x01(\fR\n" +
+	"RelayEvent\x12=\n" +
+	"\x0eNoiseHandshake\x18\x01 \x01(\v2\x13.rpc.NoiseHandshakeH\x00R\x0eNoiseHandshake\x12=\n" +
+	"\x0eMessagePayload\x18\x02 \x01(\v2\x13.rpc.MessagePayloadH\x00R\x0eMessagePayload\x12+\n" +
+	"\bRelayAck\x18\x03 \x01(\v2\r.rpc.RelayAckH\x00R\bRelayAckB\x06\n" +
+	"\x04Body\"(\n" +
+	"\bRelayAck\x12\x1c\n" +
+	"\tMessageID\x18\x01 \x01(\x04R\tMessageID\"|\n" +
+	"\x0eNoiseHandshake\x12\x1c\n" +
+	"\tMessageID\x18\x01 \x01(\x04R\tMessageID\x12(\n" +
+	"\x0fDeliverToPubKey\x18\x02 \x01(\fR\x0fDeliverToPubKey\x12\"\n" +
+	"\fHandshakeMsg\x18\x03 \x01(\fR\fHandshakeMsg\"x\n" +
+	"\x0eMessagePayload\x12\x1c\n" +
+	"\tMessageID\x18\x01 \x01(\x04R\tMessageID\x12(\n" +
+	"\x0fDeliverToPubKey\x18\x02 \x01(\fR\x0fDeliverToPubKey\x12\x1e\n" +
+	"\n" +
+	"CipherText\x18\x03 \x01(\fR\n" +
 	"CipherText2r\n" +
 	"\x04Auth\x126\n" +
 	"\fGetChallenge\x12\x10.rpc.AuthRequest\x1a\x12.rpc.AuthChallenge\"\x00\x122\n" +
-	"\x0eProveChallenge\x12\x0e.rpc.AuthProof\x1a\x0e.rpc.AuthToken\"\x002t\n" +
-	"\aTsunagi\x12/\n" +
-	"\fConnectRelay\x12\x0f.rpc.RelayEvent\x1a\n" +
-	".rpc.Empty\"\x00(\x01\x128\n" +
+	"\x0eProveChallenge\x12\x0e.rpc.AuthProof\x1a\x0e.rpc.AuthToken\"\x002y\n" +
+	"\aTsunagi\x124\n" +
+	"\fConnectRelay\x12\x0f.rpc.RelayEvent\x1a\r.rpc.RelayAck\"\x00(\x010\x01\x128\n" +
 	"\rConnectClient\x12\x10.rpc.ClientEvent\x1a\x0f.rpc.RelayEvent\"\x00(\x010\x01B\x11Z\x0ftsunagi/src/rpcb\x06proto3"
 
 var (
@@ -589,7 +669,7 @@ func file_src_rpc_tsunagi_proto_rawDescGZIP() []byte {
 	return file_src_rpc_tsunagi_proto_rawDescData
 }
 
-var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_src_rpc_tsunagi_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_src_rpc_tsunagi_proto_goTypes = []any{
 	(*AuthRequest)(nil),    // 0: rpc.AuthRequest
 	(*AuthChallenge)(nil),  // 1: rpc.AuthChallenge
@@ -598,27 +678,29 @@ var file_src_rpc_tsunagi_proto_goTypes = []any{
 	(*Empty)(nil),          // 4: rpc.Empty
 	(*ClientEvent)(nil),    // 5: rpc.ClientEvent
 	(*RelayEvent)(nil),     // 6: rpc.RelayEvent
-	(*NoiseHandshake)(nil), // 7: rpc.NoiseHandshake
-	(*MessagePayload)(nil), // 8: rpc.MessagePayload
+	(*RelayAck)(nil),       // 7: rpc.RelayAck
+	(*NoiseHandshake)(nil), // 8: rpc.NoiseHandshake
+	(*MessagePayload)(nil), // 9: rpc.MessagePayload
 }
 var file_src_rpc_tsunagi_proto_depIdxs = []int32{
-	7, // 0: rpc.ClientEvent.NoiseHandshake:type_name -> rpc.NoiseHandshake
-	8, // 1: rpc.ClientEvent.MessagePayload:type_name -> rpc.MessagePayload
-	7, // 2: rpc.RelayEvent.NoiseHandshake:type_name -> rpc.NoiseHandshake
-	8, // 3: rpc.RelayEvent.MessagePayload:type_name -> rpc.MessagePayload
-	0, // 4: rpc.Auth.GetChallenge:input_type -> rpc.AuthRequest
-	2, // 5: rpc.Auth.ProveChallenge:input_type -> rpc.AuthProof
-	6, // 6: rpc.Tsunagi.ConnectRelay:input_type -> rpc.RelayEvent
-	5, // 7: rpc.Tsunagi.ConnectClient:input_type -> rpc.ClientEvent
-	1, // 8: rpc.Auth.GetChallenge:output_type -> rpc.AuthChallenge
-	3, // 9: rpc.Auth.ProveChallenge:output_type -> rpc.AuthToken
-	4, // 10: rpc.Tsunagi.ConnectRelay:output_type -> rpc.Empty
-	6, // 11: rpc.Tsunagi.ConnectClient:output_type -> rpc.RelayEvent
-	8, // [8:12] is the sub-list for method output_type
-	4, // [4:8] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	8, // 0: rpc.ClientEvent.NoiseHandshake:type_name -> rpc.NoiseHandshake
+	9, // 1: rpc.ClientEvent.MessagePayload:type_name -> rpc.MessagePayload
+	8, // 2: rpc.RelayEvent.NoiseHandshake:type_name -> rpc.NoiseHandshake
+	9, // 3: rpc.RelayEvent.MessagePayload:type_name -> rpc.MessagePayload
+	7, // 4: rpc.RelayEvent.RelayAck:type_name -> rpc.RelayAck
+	0, // 5: rpc.Auth.GetChallenge:input_type -> rpc.AuthRequest
+	2, // 6: rpc.Auth.ProveChallenge:input_type -> rpc.AuthProof
+	6, // 7: rpc.Tsunagi.ConnectRelay:input_type -> rpc.RelayEvent
+	5, // 8: rpc.Tsunagi.ConnectClient:input_type -> rpc.ClientEvent
+	1, // 9: rpc.Auth.GetChallenge:output_type -> rpc.AuthChallenge
+	3, // 10: rpc.Auth.ProveChallenge:output_type -> rpc.AuthToken
+	7, // 11: rpc.Tsunagi.ConnectRelay:output_type -> rpc.RelayAck
+	6, // 12: rpc.Tsunagi.ConnectClient:output_type -> rpc.RelayEvent
+	9, // [9:13] is the sub-list for method output_type
+	5, // [5:9] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_src_rpc_tsunagi_proto_init() }
@@ -633,6 +715,7 @@ func file_src_rpc_tsunagi_proto_init() {
 	file_src_rpc_tsunagi_proto_msgTypes[6].OneofWrappers = []any{
 		(*RelayEvent_NoiseHandshake)(nil),
 		(*RelayEvent_MessagePayload)(nil),
+		(*RelayEvent_RelayAck)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -640,7 +723,7 @@ func file_src_rpc_tsunagi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_src_rpc_tsunagi_proto_rawDesc), len(file_src_rpc_tsunagi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

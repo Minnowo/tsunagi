@@ -1,14 +1,13 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"strings"
 	"tsunagi/src/rpc"
 )
 
-func (this *TsunagiBase) ForwardMessage(ctx context.Context, req *rpc.ClientEvent) error {
+func (this *TsunagiBase) ForwardMessage(conn *ClientConn, req *rpc.ClientEvent) error {
 
 	relayAddr, err := url.ParseRequestURI(req.RelayAddr)
 
@@ -34,8 +33,7 @@ func (this *TsunagiBase) ForwardMessage(ctx context.Context, req *rpc.ClientEven
 
 		case *rpc.ClientEvent_MessagePayload:
 
-			return this.RelayClient.Send(address, &rpc.RelayEvent{
-				PubKey: req.PubKey,
+			return this.RelayClient.Send(address, conn.ClientID, &rpc.RelayEvent{
 				Body: &rpc.RelayEvent_MessagePayload{
 					MessagePayload: v.MessagePayload,
 				},
@@ -43,13 +41,11 @@ func (this *TsunagiBase) ForwardMessage(ctx context.Context, req *rpc.ClientEven
 
 		case *rpc.ClientEvent_NoiseHandshake:
 
-			return this.RelayClient.Send(address, &rpc.RelayEvent{
-				PubKey: req.PubKey,
+			return this.RelayClient.Send(address, conn.ClientID, &rpc.RelayEvent{
 				Body: &rpc.RelayEvent_NoiseHandshake{
 					NoiseHandshake: v.NoiseHandshake,
 				},
 			})
-
 		}
 	}
 

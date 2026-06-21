@@ -2,6 +2,7 @@ package grpcapi
 
 import (
 	"io"
+	"tsunagi/src/data"
 	"tsunagi/src/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -11,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEvent, rpc.Empty]) error {
+func (this *RelayApi) ConnectRelay(stream grpc.BidiStreamingServer[rpc.RelayEvent, rpc.RelayAck]) error {
 
 	md, ok := metadata.FromIncomingContext(stream.Context())
 
@@ -27,7 +28,16 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEv
 		return status.Error(codes.Unauthenticated, "missing metadata")
 	}
 
-	log.Debug().Hex("deviceID", pubkey).Msg("relay connected")
+	var id data.Identifier
+
+	if err := id.FromBytes(pubkey); err != nil {
+		log.Debug().Err(err).Msg("relay failed to connect - pubkey could not fit inside identifier")
+		return status.Error(codes.Unauthenticated, "bad token")
+	}
+
+	log.Debug().Str("deviceID", id.String()).Msg("relay connected")
+
+	ctx := stream.Context()
 
 	for {
 		event, err := stream.Recv()
@@ -43,9 +53,14 @@ func (this *RelayApi) ConnectRelay(stream grpc.ClientStreamingServer[rpc.RelayEv
 			return err
 		}
 
-		err = this.DeliverMessage(stream.Context(), event)
+		msgID, err := this.DeliverMessage(ctx, event)
+
 		if err != nil {
 			log.Error().Err(err).Msg("error delivering message")
 		}
+
+		stream.SendMsg(rpc.RelayAck{
+			MessageID: msgID,
+		})
 	}
 }

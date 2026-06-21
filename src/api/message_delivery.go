@@ -8,64 +8,53 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (this *TsunagiBase) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) error {
+func (this *TsunagiBase) DeliverMessage(ctx context.Context, req *rpc.RelayEvent) (uint64, error) {
 
 	var deviceID data.Identifier
 
-	if err := deviceID.FromBytes(req.PubKey); err != nil {
-		return err
-	}
-
 	switch v := req.Body.(type) {
 	case *rpc.RelayEvent_MessagePayload:
-		return this.DeliverMessagePayload(ctx, deviceID, v.MessagePayload.CipherText)
+
+		if err := deviceID.FromBytes(v.MessagePayload.DeliverToPubKey); err != nil {
+			return v.MessagePayload.MessageID, err
+		}
+
+		// check if id user is online, if so, pass message directly to them
+		ok := this.ClientConns.PutRelayMsg(deviceID, req)
+
+		if ok {
+			log.Info().Str("device", deviceID.String()).Msg("message delivered to client")
+			return v.MessagePayload.MessageID, nil
+		}
+
+		// else save message in the database
+		log.Info().Str("device", deviceID.String()).Msg("message put in the DB (not really)")
+
+		return v.MessagePayload.MessageID, nil
+
 	case *rpc.RelayEvent_NoiseHandshake:
-		return this.DeliverNoiseHandshake(ctx, deviceID, v.NoiseHandshake.State)
+
+		if err := deviceID.FromBytes(v.NoiseHandshake.DeliverToPubKey); err != nil {
+			return v.NoiseHandshake.MessageID, err
+		}
+
+		// check if id user is online, if so, pass message directly to them
+		ok := this.ClientConns.PutRelayMsg(deviceID, req)
+
+		if ok {
+			log.Info().Str("device", deviceID.String()).Msg("message delivered to client")
+			return v.NoiseHandshake.MessageID, nil
+		}
+
+		// else save message in the database
+		log.Info().Str("device", deviceID.String()).Msg("message put in the DB (not really)")
+
+		return v.NoiseHandshake.MessageID, nil
+
+		// case *rpc.RelayEvent_RelayAck:
+
+		// 	return this.DeliverNoiseHandshake(ctx, deviceID, v.RelayAck.HandshakeMsg)
 	}
 
-	return nil
-}
-
-func (this *TsunagiBase) DeliverNoiseHandshake(ctx context.Context, id data.Identifier, noiseMsg []byte) error {
-
-	// check if id user is online, if so, pass message directly to them
-	ok := this.ClientConns.PutRelayMsg(id, &rpc.RelayEvent{
-		Body: &rpc.RelayEvent_NoiseHandshake{
-			NoiseHandshake: &rpc.NoiseHandshake{
-				State: noiseMsg,
-			},
-		},
-	})
-
-	if ok {
-		log.Info().Str("device", id.String()).Msg("message delivered to client")
-		return nil
-	}
-
-	// else save message in the database
-	log.Info().Str("device", id.String()).Msg("message put in the DB (not really)")
-
-	return nil
-}
-
-func (this *TsunagiBase) DeliverMessagePayload(ctx context.Context, id data.Identifier, cipherText []byte) error {
-
-	// check if id user is online, if so, pass message directly to them
-	ok := this.ClientConns.PutRelayMsg(id, &rpc.RelayEvent{
-		Body: &rpc.RelayEvent_MessagePayload{
-			MessagePayload: &rpc.MessagePayload{
-				CipherText: cipherText,
-			},
-		},
-	})
-
-	if ok {
-		log.Info().Str("device", id.String()).Msg("message delivered to client")
-		return nil
-	}
-
-	// else save message in the database
-	log.Info().Str("device", id.String()).Msg("message put in the DB (not really)")
-
-	return nil
+	return 0, nil
 }

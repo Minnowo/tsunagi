@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"tsunagi/src/client"
 	"tsunagi/src/database"
+	"tsunagi/src/rpc"
 
 	"github.com/minnowo/tsunagi/mod/tcrypto"
 )
@@ -25,6 +26,29 @@ func (this *TsunagiBase) Init(db database.DB) {
 
 	this.DB = db
 	this.ClientConns = NewClientConnManager()
-	this.RelayClient = client.NewRelayRelayClient(50)
+	this.RelayClient = client.NewRelayRelayClient(64, 64)
 	rand.Read(this.MacKey[:])
+}
+
+func (this *TsunagiBase) processAckMessages() {
+
+	ackStream := this.RelayClient.ReadAck()
+
+	for {
+		select {
+		case ack, ok := <-ackStream:
+
+			if !ok {
+				return
+			}
+
+			this.ClientConns.PutRelayMsg(ack.ClientID, &rpc.RelayEvent{
+				Body: &rpc.RelayEvent_RelayAck{
+					RelayAck: &rpc.RelayAck{
+						MessageID: ack.MessageID,
+					},
+				},
+			})
+		}
+	}
 }
